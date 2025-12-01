@@ -243,44 +243,6 @@ const CartPage = () => {
     }
   };
 
-  //     const orderRes = await fetch(`${API_BASE_URL}/orders/vnpay`, {
-  //       method: "POST",
-  //       credentials: "include",
-  //       headers: { "Content-Type": "application/json" },
-  //       body: JSON.stringify(formData),
-  //     });
-  //     const orderData = await orderRes.json();
-
-  //     if (orderData.status !== "success") {
-  //       toast.error("❌ " + orderData.message);
-  //       return;
-  //     }
-
-  //     const payRes = await fetch(
-  //       `${API_BASE_URL}/create-payment?txnRef=${orderData.txnRef}`,
-  //       {
-  //         method: "POST",
-  //         credentials: "include",
-  //       }
-  //     );
-  //     const payData = await payRes.json();
-
-  //     if (payData.status === "success") {
-  //       toast.success("✅ Chuyển hướng tới VNPAY...");
-  //       setTimeout(() => {
-  //         window.location.href = payData.paymentUrl;
-  //       }, 1500);
-  //       if (window.updateCartQuantity) {
-  //         window.updateCartQuantity();
-  //       }
-  //     } else {
-  //       toast.error("❌ " + payData.message);
-  //     }
-  //   } catch (error) {
-  //     console.error("Error:", error);
-  //     toast.error("⚠ Lỗi kết nối server!");
-  //   }
-  // };
   const handleVnpayPaymentEdit = async () => {
     try {
       const accountId = localStorage.getItem("accountId");
@@ -386,7 +348,6 @@ const CartPage = () => {
                 );
                 const statusData = await statusRes.json();
 
-                // Chỉ cancel nếu vẫn đang "CHỜ THANH TOÁN"
                 if (statusData.orderStatus === "CHỜ THANH TOÁN") {
                   const cancelRes = await fetch(
                     `${API_BASE_URL}/vnpay-cancel/${txnRef}`,
@@ -404,10 +365,8 @@ const CartPage = () => {
                     toast.error("⚠️ Bạn đã hủy thanh toán");
                   }
                 } else if (statusData.orderStatus === "Chờ duyệt") {
-                  // ✅ Thanh toán thành công
                   toast.success("✅ Thanh toán thành công!");
                 } else if (statusData.orderStatus === "THANH TOÁN THẤT BẠI") {
-                  // ✅ Thanh toán thất bại (lỗi từ VNPay)
                   toast.error("❌ Thanh toán thất bại");
                 }
               } catch (error) {
@@ -652,15 +611,6 @@ const CartPage = () => {
                     setShowVnpayModal(true);
                   }
                 }}
-                // onClick={() => {
-                //   const account = localStorage.getItem("accountName");
-                //   if (!account) {
-                //     toast.error("⚠ Bạn cần đăng nhập để thanh toán!");
-                //     setTimeout(() => navigate("/login"), 1500);
-                //   } else {
-                //     setShowVnpayModal(true);
-                //   }
-                // }}
               >
                 THANH TOÁN VNPAY
               </button>

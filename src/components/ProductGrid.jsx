@@ -131,7 +131,6 @@ const ProductGrid = ({ searchKey }) => {
 
   useEffect(() => {
     if (!searchKey.trim()) return;
-
     const delayDebounce = setTimeout(async () => {
       setLoading(true);
       setMessage("");
@@ -184,7 +183,6 @@ const ProductGrid = ({ searchKey }) => {
       `${API_BASE_URL}/dossier-statistic/list--Product--NewBest`
     );
     const data = await res.json();
-    //setProducts(data.map(mapProduct));
     setProducts(data.slice(0, 4).map(mapProduct));
   };
 
@@ -223,7 +221,7 @@ const ProductGrid = ({ searchKey }) => {
 
   const toggleFavorite = async (productId) => {
     if (!accountID) {
-      toast.info("🔑 Vui lòng đăng nhập để thêm sản phẩm yêu thích!");
+      toast.info("Vui lòng đăng nhập để thêm sản phẩm yêu thích!");
       setTimeout(() => navigate("/login"), 1200);
       return;
     }
@@ -236,7 +234,7 @@ const ProductGrid = ({ searchKey }) => {
       const result = await res.text();
 
       if (res.ok) {
-        toast.success("❤️ Đã thêm vào danh mục yêu thích!");
+        toast.success("Đã thêm vào danh mục yêu thích!");
         setFavorites((prev) => [...prev, productId]);
       } else {
         toast.error(result || "Thêm yêu thích thất bại!");
@@ -285,7 +283,7 @@ const ProductGrid = ({ searchKey }) => {
       );
 
       if (res.ok) {
-        toast.success("🛒 Sản phẩm đã được thêm vào giỏ hàng!");
+        toast.success("Sản phẩm đã được thêm vào giỏ hàng!");
         if (window.updateCartQuantity) {
           window.updateCartQuantity();
         }
@@ -420,7 +418,7 @@ const ProductGrid = ({ searchKey }) => {
             }}
             onClick={() => setOpenSearchDialog(true)}
           >
-            🔍 TÌM KIẾM NÂNG CAO
+            TÌM KIẾM NÂNG CAO
           </Button>
           <Button
             variant="outlined"
@@ -433,7 +431,7 @@ const ProductGrid = ({ searchKey }) => {
             }}
             onClick={handleOpenCategoryDialog}
           >
-            📂 LỌC THEO DANH MỤC
+            LỌC THEO DANH MỤC
           </Button>
         </Box>
       </div>
@@ -450,7 +448,6 @@ const ProductGrid = ({ searchKey }) => {
               className="product-card"
               style={{ position: "relative" }}
             >
-
               {/* Favorite icon */}
               <div
                 style={{
@@ -580,7 +577,7 @@ const ProductGrid = ({ searchKey }) => {
             </div>
           ))
         )}
-                <ProductSearch
+        <ProductSearch
           open={openSearchDialog}
           onClose={() => setOpenSearchDialog(false)}
         />
@@ -663,7 +660,7 @@ const ProductGrid = ({ searchKey }) => {
                   }}
                 >
                   <Typography fontWeight="bold">
-                    🔎 CHI NHÁNH CỬA HÀNG
+                    CHI NHÁNH CỬA HÀNG
                   </Typography>
                   <Typography sx={{ fontSize: 14, color: "gray", mb: 1 }}>
                     CÓ{" "}
@@ -704,7 +701,6 @@ const ProductGrid = ({ searchKey }) => {
                     </Select>
                   </Box>
                 </Box>
-
                 <Table>
                   <TableHead>
                     <TableRow>
@@ -729,7 +725,7 @@ const ProductGrid = ({ searchKey }) => {
                             fontWeight: "bold",
                           }}
                         >
-                          {s.quantity > 0 ? "✅ Còn hàng" : "❌ Hết hàng"}
+                          {s.quantity > 0 ? "Còn hàng" : "Hết hàng"}
                         </TableCell>
                       </TableRow>
                     ))}
@@ -750,7 +746,7 @@ const ProductGrid = ({ searchKey }) => {
           maxWidth="xs"
           fullWidth
         >
-          <DialogTitle>📁 CHỌN DANH MỤC SẢN PHẨM</DialogTitle>
+          <DialogTitle>CHỌN DANH MỤC SẢN PHẨM</DialogTitle>
           <DialogContent dividers>
             {categories.length === 0 ? (
               <p>Đang tải danh mục...</p>
@@ -777,7 +773,7 @@ const ProductGrid = ({ searchKey }) => {
           </DialogActions>
         </Dialog>
       </div>
-        
+
       <div className="pagination center">
         {totalPages > 1 && (
           <div

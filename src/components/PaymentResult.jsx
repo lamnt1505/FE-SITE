@@ -8,9 +8,6 @@ export default function PaymentResult() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    console.log('💳 PaymentResult mounted');
-    console.log('📝 Query string:', window.location.search);
-    
     const fetchResult = async () => {
       const res = await fetch(
         `${API_BASE_URL}/vnpay-return${window.location.search}`
@@ -90,7 +87,6 @@ export default function PaymentResult() {
         <h2 style={{ color: "red" }}>❌ {result.message}</h2>
       )}
 
-      {/* Hiển thị amount và orderId */}
       {result.amount && (
         <p>
           <strong>SỐ TIỀN:</strong>{" "}
@@ -103,7 +99,6 @@ export default function PaymentResult() {
         </p>
       )}
 
-      {/* Nút hành động */}
       <button
         onClick={() => navigate("/myorder")}
         className="btn"
