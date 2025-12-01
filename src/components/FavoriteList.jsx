@@ -6,6 +6,7 @@ import "bootstrap/dist/js/bootstrap.bundle.min.js";
 import { useNavigate } from "react-router-dom";
 import { Modal, Button } from "react-bootstrap";
 import API_BASE_URL from "../config/config.js";
+import Breadcrumb from "./Breadcrumb";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
@@ -100,6 +101,7 @@ export default function FavoriteList() {
       className="container mt-4"
       style={{ display: "flex", flexDirection: "column" }}
     >
+      <Breadcrumb />
       <div className="text-center mb-4" style={{ width: "100%" }}>
         <h2
           style={{

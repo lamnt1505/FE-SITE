@@ -5,6 +5,7 @@ import { insertCart } from "../redux/reducers/cartReducer";
 import { useDispatch, useSelector } from "react-redux";
 import API_BASE_URL from "../config/config.js";
 import { toast } from "react-toastify";
+import Breadcrumb from "./Breadcrumb";
 import "react-toastify/dist/ReactToastify.css";
 
 const CatalogPage = () => {
@@ -22,10 +23,14 @@ const CatalogPage = () => {
 
   useEffect(() => {
     if (cartState.status === "succeeded") {
+        if (window.updateCartQuantity) {
+          window.updateCartQuantity();
+        }
       toast.success(
         <div className="flex items-center space-x-2">
           <span>SẢN PHẨM ĐÃ ĐƯỢC THÊM VÀO GIỎ HÀNG!</span>
-        </div>,
+        </div>
+        ,
         {
           style: {
             background: "#111",
@@ -90,6 +95,7 @@ const CatalogPage = () => {
         flexDirection: "column",
       }}
     >
+      <Breadcrumb />
       <div
         className="product-category-title text-center mb-4"
         style={{

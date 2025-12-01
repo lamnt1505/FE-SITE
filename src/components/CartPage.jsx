@@ -6,6 +6,7 @@ import { useDispatch, useSelector } from "react-redux";
 import API_BASE_URL from "../config/config.js";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import Breadcrumb from "./Breadcrumb";
 
 const CartPage = () => {
   const [cartItems, setCartItems] = useState([]);
@@ -28,10 +29,9 @@ const CartPage = () => {
     try {
       const accountID = localStorage.getItem("accountId");
 
-      const res = await fetch(
-        `${API_BASE_URL}/address/account/${accountID}`,
-        { credentials: "include" }
-      );
+      const res = await fetch(`${API_BASE_URL}/address/account/${accountID}`, {
+        credentials: "include",
+      });
       if (!res.ok) throw new Error("Lỗi lấy thông tin tài khoản");
 
       const data = await res.json();
@@ -69,7 +69,7 @@ const CartPage = () => {
           name: item.name,
           price: item.price,
           amount: item.amount,
-          imageUrl: item.image
+          imageUrl: item.image,
         }));
         setCartItems(mappedCart);
       } catch (err) {
@@ -121,6 +121,9 @@ const CartPage = () => {
       if (result === "2") {
         setCartItems((prev) => prev.filter((item) => item.id !== id));
         toast.success("🗑 Xóa sản phẩm thành công!");
+        if (window.updateCartQuantity) {
+          window.updateCartQuantity();
+        }
       } else {
         toast.error("❌ Xóa sản phẩm thất bại!");
       }
@@ -138,7 +141,8 @@ const CartPage = () => {
     );
   };
 
-  const getTotal = () => cartItems.reduce((sum, item) => sum + item.price * item.amount, 0);
+  const getTotal = () =>
+    cartItems.reduce((sum, item) => sum + item.price * item.amount, 0);
 
   const applyDiscount = async () => {
     if (!discountCode.trim()) {
@@ -166,10 +170,8 @@ const CartPage = () => {
         toast.error(data.message || "❌ Mã giảm giá không hợp lệ!");
         return;
       }
-
       if (data.success) {
         setDiscountedTotal(data.discountedTotal);
-
         toast.success(
           `✅ ${
             data.message
@@ -203,24 +205,32 @@ const CartPage = () => {
       return;
     }
     try {
-      const res = await fetch(
-        `${API_BASE_URL}/dossier-statistic/orders`,
-        {
-          method: "POST",
-          credentials: "include",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(formData),
-        }
-      );
+      const accountId = localStorage.getItem("accountId");
+      const res = await fetch(`${API_BASE_URL}/dossier-statistic/orders`, {
+        method: "POST",
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+          "X-Account-ID": accountId,
+        },
+        body: JSON.stringify(formData),
+      });
       const result = await res.text();
 
       if (result === "1") {
-        toast.success("Đặt hàng thành công!");
+        toast.success("Đặt hàng thành công! Đang chuyển hướng...", {
+          autoClose: 1000,
+        });
+        toast.info("📧 Email xác nhận đã được gửi tới " + email, {
+          autoClose: 2000,
+        });
         setCartItems([]);
-        setTimeout(() => {
-          window.location.reload();
-        }, 1500);
+        setTimeout(() => navigate("/myorder"), 1200);
+        if (window.updateCartQuantity) {
+          window.updateCartQuantity();
+        }
       } else if (result === "0") {
+        localStorage.setItem("redirectAfterLogin", "/cart");
         toast.error("⚠ Bạn cần đăng nhập để đặt hàng.");
         setTimeout(() => navigate("/login"), 1500);
       } else if (result === "-1") {
@@ -233,12 +243,61 @@ const CartPage = () => {
     }
   };
 
+  //     const orderRes = await fetch(`${API_BASE_URL}/orders/vnpay`, {
+  //       method: "POST",
+  //       credentials: "include",
+  //       headers: { "Content-Type": "application/json" },
+  //       body: JSON.stringify(formData),
+  //     });
+  //     const orderData = await orderRes.json();
+
+  //     if (orderData.status !== "success") {
+  //       toast.error("❌ " + orderData.message);
+  //       return;
+  //     }
+
+  //     const payRes = await fetch(
+  //       `${API_BASE_URL}/create-payment?txnRef=${orderData.txnRef}`,
+  //       {
+  //         method: "POST",
+  //         credentials: "include",
+  //       }
+  //     );
+  //     const payData = await payRes.json();
+
+  //     if (payData.status === "success") {
+  //       toast.success("✅ Chuyển hướng tới VNPAY...");
+  //       setTimeout(() => {
+  //         window.location.href = payData.paymentUrl;
+  //       }, 1500);
+  //       if (window.updateCartQuantity) {
+  //         window.updateCartQuantity();
+  //       }
+  //     } else {
+  //       toast.error("❌ " + payData.message);
+  //     }
+  //   } catch (error) {
+  //     console.error("Error:", error);
+  //     toast.error("⚠ Lỗi kết nối server!");
+  //   }
+  // };
   const handleVnpayPaymentEdit = async () => {
     try {
+      const accountId = localStorage.getItem("accountId");
+      if (!accountId) {
+        localStorage.setItem("redirectAfterLogin", "/cart");
+        toast.error("⚠ Bạn cần đăng nhập để thanh toán!");
+        setTimeout(() => navigate("/login"), 1500);
+        return;
+      }
+
       const orderRes = await fetch(`${API_BASE_URL}/orders/vnpay`, {
         method: "POST",
         credentials: "include",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          "X-Account-ID": accountId,
+        },
         body: JSON.stringify(formData),
       });
       const orderData = await orderRes.json();
@@ -248,31 +307,156 @@ const CartPage = () => {
         return;
       }
 
+      const txnRef = orderData.txnRef;
+      console.log("✅ Tạo đơn hàng thành công, TxnRef:", txnRef);
+
+      toast.success("📧 Email xác nhận đã được gửi", { autoClose: 2000 });
+
+      localStorage.setItem("currentTxnRef", txnRef);
+      localStorage.setItem("paymentStartTime", new Date().getTime());
+
       const payRes = await fetch(
-        `${API_BASE_URL}/create-payment?txnRef=${orderData.txnRef}`,
+        `${API_BASE_URL}/create-payment?txnRef=${txnRef}`,
         {
           method: "POST",
           credentials: "include",
         }
       );
+
       const payData = await payRes.json();
 
       if (payData.status === "success") {
         toast.success("✅ Chuyển hướng tới VNPAY...");
+
+        const paymentUrl = payData.paymentUrl;
+
         setTimeout(() => {
-          window.location.href = payData.paymentUrl;
+          const vnpayWindow = window.open(
+            paymentUrl,
+            "vnpay_payment",
+            "width=800,height=600"
+          );
+
+          if (!vnpayWindow || vnpayWindow.closed) {
+            toast.error("❌ Vui lòng cho phép popup để thanh toán");
+            localStorage.removeItem("currentTxnRef");
+            localStorage.removeItem("paymentStartTime");
+            return;
+          }
+
+          const startTime = new Date().getTime();
+          const TIMEOUT = 10 * 60 * 1000;
+
+          const checkWindowInterval = setInterval(async () => {
+            const elapsed = new Date().getTime() - startTime;
+
+            if (elapsed > TIMEOUT) {
+              clearInterval(checkWindowInterval);
+              if (vnpayWindow && !vnpayWindow.closed) {
+                vnpayWindow.close();
+              }
+
+              try {
+                await fetch(`${API_BASE_URL}/vnpay-cancel/${txnRef}`, {
+                  method: "POST",
+                  credentials: "include",
+                });
+                toast.error("Phiên thanh toán đã hết hạn");
+              } catch (err) {
+                console.error("Lỗi khi hủy timeout:", err);
+              }
+
+              localStorage.removeItem("currentTxnRef");
+              localStorage.removeItem("paymentStartTime");
+
+              setTimeout(() => {
+                window.location.href = "/myorder";
+              }, 1500);
+              return;
+            }
+
+            if (vnpayWindow && vnpayWindow.closed) {
+              clearInterval(checkWindowInterval);
+              console.log("Popup VNPay đã đóng");
+
+              try {
+                const statusRes = await fetch(
+                  `${API_BASE_URL}/check-payment-status/${txnRef}`,
+                  { credentials: "include" }
+                );
+                const statusData = await statusRes.json();
+
+                // Chỉ cancel nếu vẫn đang "CHỜ THANH TOÁN"
+                if (statusData.orderStatus === "CHỜ THANH TOÁN") {
+                  const cancelRes = await fetch(
+                    `${API_BASE_URL}/vnpay-cancel/${txnRef}`,
+                    {
+                      method: "POST",
+                      credentials: "include",
+                      headers: { "Content-Type": "application/json" },
+                    }
+                  );
+
+                  const cancelData = await cancelRes.json();
+                  console.log("API Cancel response:", cancelData);
+
+                  if (cancelData.status === "ok") {
+                    toast.error("⚠️ Bạn đã hủy thanh toán");
+                  }
+                } else if (statusData.orderStatus === "Chờ duyệt") {
+                  // ✅ Thanh toán thành công
+                  toast.success("✅ Thanh toán thành công!");
+                } else if (statusData.orderStatus === "THANH TOÁN THẤT BẠI") {
+                  // ✅ Thanh toán thất bại (lỗi từ VNPay)
+                  toast.error("❌ Thanh toán thất bại");
+                }
+              } catch (error) {
+                console.error("Lỗi khi kiểm tra trạng thái:", error);
+                toast.error("⚠️ Không thể xác định trạng thái thanh toán");
+              }
+
+              localStorage.removeItem("currentTxnRef");
+              localStorage.removeItem("paymentStartTime");
+
+              setTimeout(() => {
+                window.location.href = "/myorder";
+              }, 1500);
+            }
+          }, 1000);
+
+          const cleanupHandler = () => {
+            clearInterval(checkWindowInterval);
+            if (vnpayWindow && !vnpayWindow.closed) {
+              vnpayWindow.close();
+            }
+          };
+
+          window.addEventListener("beforeunload", cleanupHandler);
+
+          window._vnpayCheckInterval = checkWindowInterval;
+          window._vnpayCleanup = cleanupHandler;
+
+          if (window.updateCartQuantity) {
+            window.updateCartQuantity();
+          }
         }, 1500);
       } else {
         toast.error("❌ " + payData.message);
+        localStorage.removeItem("currentTxnRef");
+        localStorage.removeItem("paymentStartTime");
       }
     } catch (error) {
       console.error("Error:", error);
       toast.error("⚠ Lỗi kết nối server!");
+
+      localStorage.removeItem("currentTxnRef");
+      localStorage.removeItem("paymentStartTime");
     }
   };
 
   return (
     <div className="cart-page d-flex flex-column min-vh-100">
+      <Breadcrumb />
       <div className="cart-table card shadow-sm border-0 mb-4">
         <div className="card-body p-0">
           <table className="table table-hover align-middle mb-0 text-center">
@@ -426,8 +610,9 @@ const CartPage = () => {
             <div className="d-flex gap-3 justify-content-md-end justify-content-center">
               <button
                 onClick={() => {
-                  const account = localStorage.getItem("accountName");
-                  if (!account) {
+                  const accountId = localStorage.getItem("accountId");
+                  if (!accountId) {
+                    localStorage.setItem("redirectAfterLogin", "/cart");
                     toast.error("⚠ Bạn cần đăng nhập để đặt hàng!");
                     setTimeout(() => navigate("/login"), 1500);
                   } else {
@@ -440,15 +625,42 @@ const CartPage = () => {
               </button>
               <button
                 className="btn btn-danger px-4"
+                style={{
+                  background: "linear-gradient(45deg, #dc3545, #ff6b6b)",
+                  border: "none",
+                  fontWeight: "600",
+                  fontSize: "1rem",
+                  boxShadow: "0 4px 8px rgba(220, 53, 69, 0.3)",
+                  transition: "all 0.3s ease",
+                }}
+                onMouseEnter={(e) => {
+                  e.target.style.boxShadow =
+                    "0 6px 12px rgba(220, 53, 69, 0.5)";
+                  e.target.style.transform = "translateY(-2px)";
+                }}
+                onMouseLeave={(e) => {
+                  e.target.style.boxShadow = "0 4px 8px rgba(220, 53, 69, 0.3)";
+                  e.target.style.transform = "translateY(0)";
+                }}
                 onClick={() => {
-                  const account = localStorage.getItem("accountName");
-                  if (!account) {
+                  const accountId = localStorage.getItem("accountId");
+                  if (!accountId) {
+                    localStorage.setItem("redirectAfterLogin", "/cart");
                     toast.error("⚠ Bạn cần đăng nhập để thanh toán!");
                     setTimeout(() => navigate("/login"), 1500);
                   } else {
                     setShowVnpayModal(true);
                   }
                 }}
+                // onClick={() => {
+                //   const account = localStorage.getItem("accountName");
+                //   if (!account) {
+                //     toast.error("⚠ Bạn cần đăng nhập để thanh toán!");
+                //     setTimeout(() => navigate("/login"), 1500);
+                //   } else {
+                //     setShowVnpayModal(true);
+                //   }
+                // }}
               >
                 THANH TOÁN VNPAY
               </button>

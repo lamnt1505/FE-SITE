@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-
 import API_BASE_URL from "../config/config.js";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -13,7 +12,6 @@ const LoginPage = () => {
   const [error, setError] = useState("");
   const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
-
 
   const refreshCaptcha = async () => {
     try {
@@ -28,7 +26,6 @@ const LoginPage = () => {
       const imgUrl = URL.createObjectURL(blob);
       setCaptchaUrl(imgUrl);
     } catch (err) {
-      console.error("Lỗi captcha:", err);
       toast.error("Không tải được captcha");
     }
   };
@@ -56,7 +53,7 @@ const LoginPage = () => {
       });
 
       const data = await res.json();
-      console.log("Login response:", data);
+      console.log("🔍 Server response:", data);
 
       if (data.captchaValid === false) {
         setError("Captcha không hợp lệ. Vui lòng thử lại.");
@@ -71,30 +68,64 @@ const LoginPage = () => {
         setCaptcha("");
         return;
       }
-
       if (data.success) {
         localStorage.setItem("accountName", accountName);
         localStorage.setItem("accountId", data.accountID);
 
-        console.log("Lưu accountID:", data.accountID);
-
         toast.success("Đăng nhập thành công!");
 
-        setTimeout(() => {
-          if (data.admin || data.employee) {
+        const redirect = localStorage.getItem("redirectAfterLogin");
+
+        if (redirect) {
+          localStorage.removeItem("redirectAfterLogin");
+          navigate(redirect);
+          setTimeout(() => {
+            window.location.reload(); // ✅ Reload sau 1.5 giây
+          }, 1500);
+          return;
+          // console.log("✅ Navigate tới:", redirect);
+          // localStorage.removeItem("redirectAfterLogin");
+          // setTimeout(() => navigate(redirect), 1000);
+          // return;
+        }
+
+        if (data.isAdmin || data.isEmployee) {
+          setTimeout(() => {
             navigate("/admin");
             window.location.reload();
-          } else if (data.user) {
+          }, 1000);
+        } else if (data.isUser) {
+          setTimeout(() => {
             navigate("/index");
             window.location.reload();
-          } else {
+          }, 1000);
+        } else {
+          setTimeout(() => {
             navigate("/index");
             window.location.reload();
-          }
-        }, 1000);
+          }, 1000);
+        }
       }
+      // if (data.success) {
+      //   localStorage.setItem("accountName", accountName);
+      //   localStorage.setItem("accountId", data.accountID);
+
+      //   toast.success("Đăng nhập thành công!");
+
+      //   setTimeout(() => {
+      //     if (data.admin || data.employee) {
+      //       navigate("/admin");
+      //       window.location.reload();
+      //     } else if (data.user) {
+      //       navigate("/index");
+      //       window.location.reload();
+      //     } else {
+      //       navigate("/index");
+      //       window.location.reload();
+      //     }
+      //   }, 50000009);
+      // }
     } catch (err) {
-      console.error("Lỗi login:", err);
       setError("Không thể kết nối server!");
     }
   };
@@ -159,7 +190,11 @@ const LoginPage = () => {
             />
           </div>
 
-          <button type="submit" className="btn btn-primary w-100 mb-2" style={{ background: "linear-gradient(45deg, #1976d2, #00f2fe)", }}>
+          <button
+            type="submit"
+            className="btn btn-primary w-100 mb-2"
+            style={{ background: "linear-gradient(45deg, #1976d2, #00f2fe)" }}
+          >
             ĐĂNG NHẬP
           </button>
 

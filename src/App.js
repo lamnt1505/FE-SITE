@@ -14,6 +14,7 @@ import LoginPage from "./components/LoginPage";
 import RegisterPage from "./components/RegisterPage";
 import MyOrdersPage from "./components/MyOrdersPage";
 import PaymentResult from "./components/PaymentResult";
+import VnpayRedirect from "./components/VnpayRedirect";
 import DiscountTicker from "./components/DiscountTicker";
 import SearchPage from "./components/SearchPage";
 import FavoriteList from "./components/FavoriteList"; 
@@ -56,6 +57,7 @@ function App() {
               <Route path="/favorites/:accountID" element={<FavoriteList />} />
               <Route path="/product/:id" element={<ProductDetailPage />} />
               <Route path="/search" element={<SearchPage />} />
+              <Route path="/vnpay-redirect" element={<VnpayRedirect />} />
               <Route path="/payment-result" element={<PaymentResult />} />
               <Route path="/updateProfile/:accountID" element={<UpdateProfileDialogPage />} />
               <Route path="/catalog/:categoryID" element={<CatalogPage />} />

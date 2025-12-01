@@ -20,12 +20,12 @@ import {
   TableCell,
   TableHead,
   TableRow,
-  Stack,
 } from "@mui/material";
 import Rating from "@mui/material/Rating";
 import { Toast } from "bootstrap";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import "../styles/product/Productgirl.css";
 import API_BASE_URL from "../config/config.js";
 
 const ProductGrid = ({ searchKey }) => {
@@ -36,6 +36,7 @@ const ProductGrid = ({ searchKey }) => {
   const [openSearchDialog, setOpenSearchDialog] = useState(false);
   const [favorites, setFavorites] = useState([]);
   const [detailProduct, setProductDetail] = useState(null);
+
   const [branchID, setBranchID] = useState(1);
   const [stockByBranch, setStockByBranch] = useState(null);
 
@@ -61,7 +62,7 @@ const ProductGrid = ({ searchKey }) => {
 
   const [currentPage, setCurrentPage] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
-  const pageSize = 5;
+  const pageSize = 4;
 
   const [comparedProducts, setComparedProducts] = useState([]);
   const [showCompareModal, setShowCompareModal] = useState(false);
@@ -101,7 +102,7 @@ const ProductGrid = ({ searchKey }) => {
     category: p.categoryname,
     tradeName: p.tradeName,
     price: p.price,
-    imageUrl: p.image
+    imageUrl: p.image,
   });
 
   const fetchProductsDefault = async (pageNum = 0) => {
@@ -167,7 +168,7 @@ const ProductGrid = ({ searchKey }) => {
       `${API_BASE_URL}/dossier-statistic/list--Product--PriceDesc`
     );
     const data = await res.json();
-    setProducts(data.map(mapProduct));
+    setProducts(data.slice(0, 4).map(mapProduct));
   };
 
   const fetchPriceAsc = async () => {
@@ -175,7 +176,7 @@ const ProductGrid = ({ searchKey }) => {
       `${API_BASE_URL}/dossier-statistic/list--Product--PriceAsc`
     );
     const data = await res.json();
-    setProducts(data.map(mapProduct));
+    setProducts(data.slice(0, 4).map(mapProduct));
   };
 
   const fetchNewBest = async () => {
@@ -183,7 +184,8 @@ const ProductGrid = ({ searchKey }) => {
       `${API_BASE_URL}/dossier-statistic/list--Product--NewBest`
     );
     const data = await res.json();
-    setProducts(data.map(mapProduct));
+    //setProducts(data.map(mapProduct));
+    setProducts(data.slice(0, 4).map(mapProduct));
   };
 
   const fetchCategories = async () => {
@@ -388,8 +390,8 @@ const ProductGrid = ({ searchKey }) => {
         >
           {[
             { label: "LỌC THEO DANH MỤC:" },
-            { label: "GIÁ ↑ THẤP ĐẾN CAO", onClick: fetchPriceAsc },
-            { label: "GIÁ ↓ CAO ĐẾN THẤP", onClick: fetchPriceDesc },
+            { label: "GIÁ THẤP ĐẾN CAO", onClick: fetchPriceAsc },
+            { label: "GIÁ CAO ĐẾN THẤP", onClick: fetchPriceDesc },
             { label: "SẢN PHẨM MỚI / TỐT NHẤT", onClick: fetchNewBest },
           ].map((btn, index) => (
             <Button
@@ -448,6 +450,8 @@ const ProductGrid = ({ searchKey }) => {
               className="product-card"
               style={{ position: "relative" }}
             >
+
+              {/* Favorite icon */}
               <div
                 style={{
                   position: "absolute",
@@ -465,6 +469,7 @@ const ProductGrid = ({ searchKey }) => {
                   <FavoriteBorderIcon />
                 )}
               </div>
+              {/* Search icon */}
               <div
                 style={{
                   position: "absolute",
@@ -477,13 +482,15 @@ const ProductGrid = ({ searchKey }) => {
               >
                 <SearchIcon />
               </div>
+
+              {/* Product image */}
               <div className="product-image-container">
                 <img
                   src={
                     product.imageUrl
-                      ? product.imageUrl 
+                      ? product.imageUrl
                       : product.imageBase64
-                      ? `data:image/jpeg;base64,${product.imageBase64}` 
+                      ? `data:image/jpeg;base64,${product.imageBase64}`
                       : "https://via.placeholder.com/150"
                   }
                   alt={product.title}
@@ -496,10 +503,12 @@ const ProductGrid = ({ searchKey }) => {
                 />
               </div>
 
+              {/* Product info */}
               <div className="product-info">
                 <h3>{product.title}</h3>
                 <p>
-                  {product.category} - {product.tradeName}
+                  <strong>Loại sản Phẩm: </strong> {product.category} -{" "}
+                  <strong>Loại Thương Hiệu: </strong> {product.tradeName}
                 </p>
                 <div>
                   <span>{product.price.toLocaleString("vi-VN")} ₫</span>
@@ -571,7 +580,7 @@ const ProductGrid = ({ searchKey }) => {
             </div>
           ))
         )}
-        <ProductSearch
+                <ProductSearch
           open={openSearchDialog}
           onClose={() => setOpenSearchDialog(false)}
         />
@@ -768,7 +777,7 @@ const ProductGrid = ({ searchKey }) => {
           </DialogActions>
         </Dialog>
       </div>
-
+        
       <div className="pagination center">
         {totalPages > 1 && (
           <div
@@ -823,7 +832,7 @@ const ProductGrid = ({ searchKey }) => {
         )}
       </div>
 
-      {/* 🆕 Modal so sánh sản phẩm */}
+      {/* Modal so sánh sản phẩm */}
       {showCompareModal && comparedProducts.length === 2 && (
         <div
           style={{
@@ -918,6 +927,7 @@ const ProductGrid = ({ searchKey }) => {
           </div>
         </div>
       )}
+
       <Dialog
         open={openImageDialog}
         onClose={() => setOpenImageDialog(false)}
