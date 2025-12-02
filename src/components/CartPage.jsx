@@ -272,8 +272,6 @@ const CartPage = () => {
       const txnRef = orderData.txnRef;
       console.log("✅ Tạo đơn hàng thành công, TxnRef:", txnRef);
 
-      toast.success("📧 Email xác nhận đã được gửi", { autoClose: 2000 });
-
       localStorage.setItem("currentTxnRef", txnRef);
       localStorage.setItem("paymentStartTime", new Date().getTime());
 

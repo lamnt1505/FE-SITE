@@ -12,18 +12,16 @@ export default function PaymentResult() {
       const res = await fetch(
         `${API_BASE_URL}/vnpay-return${window.location.search}`
       );
-      
       const data = await res.json();
-      console.log("👉 Gọi API:", data);
       setResult(data);
     };
     fetchResult();
   }, []);
 
   useEffect(() => {
-    if (result?.status === "success") {
+    if (result?.status === "success" || result?.status === "failed") {
       const timer = setInterval(() => {
-        setCountdown(prev => {
+        setCountdown((prev) => {
           if (prev <= 1) {
             window.close();
             return 0;
@@ -42,28 +40,53 @@ export default function PaymentResult() {
       {result.status === "success" ? (
         <>
           <h2 style={{ color: "green" }}>{result.message}</h2>
+          <div
+            style={{
+              backgroundColor: "#e8f5e9",
+              border: "1px solid #4caf50",
+              borderRadius: 8,
+              padding: 12,
+              marginTop: 10,
+              marginBottom: 15,
+              display: "flex",
+              alignItems: "center",
+              gap: 10,
+            }}
+          >
+            <span style={{ fontSize: 18 }}>✉️</span>
+            <p style={{ margin: 0, color: "#2e7d32 " }}>
+              Email xác nhận đã được gửi đến hộp thư của bạn
+            </p>
+          </div>
           <p style={{ color: "#999", fontSize: 14 }}>
             Tab này sẽ tự đóng sau <strong>{countdown}</strong> giây...
           </p>
           {result.products && result.products.length > 0 && (
-            <div style={{
-              backgroundColor: "#f9f9f9",
-              padding: 15,
-              borderRadius: 8,
-              marginTop: 15,
-              marginBottom: 15,
-              border: "1px solid #e0e0e0"
-            }}>
-              <h3 style={{ marginTop: 0, marginBottom: 10 }}>Chi tiết đơn hàng:</h3>
+            <div
+              style={{
+                backgroundColor: "#f9f9f9",
+                padding: 15,
+                borderRadius: 8,
+                marginTop: 15,
+                marginBottom: 15,
+                border: "1px solid #e0e0e0",
+              }}
+            >
+              <h3 style={{ marginTop: 0, marginBottom: 10 }}>
+                Chi tiết đơn hàng:
+              </h3>
               {result.products.map((product, index) => (
                 <div
                   key={index}
                   style={{
                     padding: 10,
-                    borderBottom: index < result.products.length - 1 ? "1px solid #e0e0e0" : "none",
+                    borderBottom:
+                      index < result.products.length - 1
+                        ? "1px solid #e0e0e0"
+                        : "none",
                     display: "flex",
                     justifyContent: "space-between",
-                    alignItems: "center"
+                    alignItems: "center",
                   }}
                 >
                   <div style={{ flex: 1 }}>
@@ -75,7 +98,9 @@ export default function PaymentResult() {
                       {parseInt(product.price).toLocaleString("vi-VN")} VND
                     </p>
                   </div>
-                  <p style={{ margin: 0, fontWeight: "bold", color: "#4facfe" }}>
+                  <p
+                    style={{ margin: 0, fontWeight: "bold", color: "#4facfe" }}
+                  >
                     {parseInt(product.total).toLocaleString("vi-VN")} VND
                   </p>
                 </div>
@@ -84,7 +109,28 @@ export default function PaymentResult() {
           )}
         </>
       ) : (
-        <h2 style={{ color: "red" }}>❌ {result.message}</h2>
+        <>
+          <h2 style={{ color: "red" }}>❌ {result.message}</h2>
+          <div
+            style={{
+              backgroundColor: "#ffebee",
+              border: "1px solid #f44336",
+              borderRadius: 8,
+              padding: 12,
+              marginTop: 10,
+              marginBottom: 15,
+              color: "#c62828",
+            }}
+          >
+            <p style={{ margin: 0 }}>
+              ⚠️ Giao dịch không thành công. Vui lòng thử lại hoặc liên hệ hỗ
+              trợ.
+            </p>
+          </div>
+          <p style={{ color: "#999", fontSize: 14 }}>
+            Tab này sẽ tự đóng sau <strong>{countdown}</strong> giây...
+          </p>
+        </>
       )}
 
       {result.amount && (
@@ -110,7 +156,7 @@ export default function PaymentResult() {
           borderRadius: "30px",
           padding: "8px 20px",
           boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
-          cursor: "pointer"
+          cursor: "pointer",
         }}
       >
         QUAY VỀ ĐƠN HÀNG CỦA TÔI

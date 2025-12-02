@@ -76,10 +76,10 @@ export default function FavoriteList() {
       );
 
       if (res.ok) {
-        toast.success("🛒 Sản phẩm đã được thêm vào giỏ hàng!");
+        toast.success("Sản phẩm đã được thêm vào giỏ hàng!");
         if (window.updateCartQuantity) window.updateCartQuantity();
       } else if (res.status === 401) {
-        toast.info("🔑 Vui lòng đăng nhập để thêm sản phẩm vào giỏ hàng!");
+        toast.info("Vui lòng đăng nhập để thêm sản phẩm vào giỏ hàng!");
       } else {
         const result = await res.text();
         toast.error(result || "Thêm vào giỏ thất bại!");
@@ -189,7 +189,7 @@ export default function FavoriteList() {
                         }}
                         onClick={() => handleAddToCart(item.id)}
                       >
-                        🛒 Thêm vào giỏ
+                        Thêm vào giỏ
                       </button>
                       <button
                         className="btn btn-danger btn-sm"
@@ -206,7 +206,7 @@ export default function FavoriteList() {
                         }}
                         onClick={() => handleConfirmDelete(item)}
                       >
-                        🗑 Xóa
+                        Xóa
                       </button>
                     </td>
                   </tr>

@@ -21,7 +21,7 @@ const Header = ({ onSearch = () => {} }) => {
   const menuRef = useRef(null);
   const navigate = useNavigate();
 
-  // ✅ Khởi tạo state 1 lần duy nhất
+  // khởi tạo state 1 lần duy nhất
   useEffect(() => {
     const accName = localStorage.getItem("accountName");
     const accId = localStorage.getItem("accountId");
@@ -32,7 +32,6 @@ const Header = ({ onSearch = () => {} }) => {
     fetchCartQuantity();
   }, []);
 
-  // ✅ Fetch categories
   useEffect(() => {
     fetch(`${API_BASE_URL}/api/v1/category/Listgetall`)
       .then((res) => res.json())
@@ -40,7 +39,7 @@ const Header = ({ onSearch = () => {} }) => {
       .catch((err) => console.error("Lỗi khi lấy danh mục:", err));
   }, []);
 
-  // ✅ Close menu khi click outside
+  // Close menu khi click outside
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (menuRef.current && !menuRef.current.contains(event.target)) {
@@ -54,7 +53,7 @@ const Header = ({ onSearch = () => {} }) => {
     }
   }, [isMenuOpen]);
 
-  // ✅ Global function để update cart
+  // Cập nhật số lượng giỏ hàng từ bên ngoài
   useEffect(() => {
     window.updateCartQuantity = fetchCartQuantity;
     return () => delete window.updateCartQuantity;
@@ -263,7 +262,7 @@ const Header = ({ onSearch = () => {} }) => {
           </div>
         </div>
 
-        {/* Thanh Tìm Kiếm */}
+        {/* searchbar*/}
         <div className="search-bar" style={{ flex: 1, margin: "0 20px" }}>
           <input
             type="text"
@@ -289,7 +288,7 @@ const Header = ({ onSearch = () => {} }) => {
           </button>
         </div>
 
-        {/* Header Icons */}
+        {/* icon */}
         <div className="header-icons d-flex align-items-center gap-3">
           {/* Giỏ Hàng */}
           <div
@@ -321,7 +320,7 @@ const Header = ({ onSearch = () => {} }) => {
             </span>
           </div>
 
-          {/* Nút khi đã đăng nhập */}
+          {/* Hiển thị các nút khi đã đăng nhập */}
           {username && (
             <>
               <button
@@ -339,7 +338,7 @@ const Header = ({ onSearch = () => {} }) => {
             </>
           )}
 
-          {/* User Menu */}
+          {/* các menu */}
           {username ? (
             <div className="user-info position-relative">
               <span
@@ -434,7 +433,7 @@ const Header = ({ onSearch = () => {} }) => {
         </div>
       </header>
 
-      {/* Modal Đổi Mật Khẩu */}
+      {/* Modal hiển thị đổi pass */}
       {showChangePass && (
         <div
           className="position-fixed top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center bg-dark bg-opacity-50"

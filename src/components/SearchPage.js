@@ -8,7 +8,6 @@ const SearchPage = () => {
     <>
       <Header
         onSearch={(key) => {
-          console.log("🔁 onSearch nhận key:", key);
           setSearchKey(key);
         }}
       />
