@@ -21,7 +21,6 @@ const Header = ({ onSearch = () => {} }) => {
   const menuRef = useRef(null);
   const navigate = useNavigate();
 
-  // khởi tạo state 1 lần duy nhất
   useEffect(() => {
     const accName = localStorage.getItem("accountName");
     const accId = localStorage.getItem("accountId");
@@ -39,7 +38,6 @@ const Header = ({ onSearch = () => {} }) => {
       .catch((err) => console.error("Lỗi khi lấy danh mục:", err));
   }, []);
 
-  // Close menu khi click outside
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (menuRef.current && !menuRef.current.contains(event.target)) {
@@ -49,11 +47,11 @@ const Header = ({ onSearch = () => {} }) => {
 
     if (isMenuOpen) {
       document.addEventListener("mousedown", handleClickOutside);
-      return () => document.removeEventListener("mousedown", handleClickOutside);
+      return () =>
+        document.removeEventListener("mousedown", handleClickOutside);
     }
   }, [isMenuOpen]);
 
-  // Cập nhật số lượng giỏ hàng từ bên ngoài
   useEffect(() => {
     window.updateCartQuantity = fetchCartQuantity;
     return () => delete window.updateCartQuantity;
@@ -61,9 +59,12 @@ const Header = ({ onSearch = () => {} }) => {
 
   const fetchCartQuantity = async () => {
     try {
-      const res = await fetch(`${API_BASE_URL}/dossier-statistic/cart/quantity`, {
-        credentials: "include",
-      });
+      const res = await fetch(
+        `${API_BASE_URL}/dossier-statistic/cart/quantity`,
+        {
+          credentials: "include",
+        }
+      );
       const qty = await res.json();
       setCartQuantity(qty);
     } catch (error) {
@@ -73,7 +74,7 @@ const Header = ({ onSearch = () => {} }) => {
 
   const handleSearch = () => {
     if (key.trim() === "") {
-      toast.info("🔎 Vui lòng nhập nội dung để tìm kiếm!");
+      toast.info("Vui lòng nhập nội dung để tìm kiếm!");
       return;
     }
     onSearch(key);
@@ -98,11 +99,11 @@ const Header = ({ onSearch = () => {} }) => {
       setCartQuantity(0);
       setUserDropdown(false);
 
-      toast.success("✅ Đăng xuất thành công");
+      toast.success("Đăng xuất thành công");
       navigate("/index");
     } catch (err) {
       console.error("Lỗi đăng xuất:", err);
-      toast.error("❌ Có lỗi khi đăng xuất");
+      toast.error("Có lỗi khi đăng xuất");
     }
   };
 
@@ -110,17 +111,17 @@ const Header = ({ onSearch = () => {} }) => {
     e.preventDefault();
 
     if (!oldPassword || !newPassword || !confirmPassword) {
-      toast.error("❌ Vui lòng điền đầy đủ thông tin!");
+      toast.error("Vui lòng điền đầy đủ thông tin!");
       return;
     }
 
     if (newPassword !== confirmPassword) {
-      toast.error("❌ Mật khẩu mới không khớp!");
+      toast.error("Mật khẩu mới không khớp!");
       return;
     }
 
     if (newPassword.length < 6) {
-      toast.error("❌ Mật khẩu mới phải ít nhất 6 ký tự!");
+      toast.error("Mật khẩu mới phải ít nhất 6 ký tự!");
       return;
     }
 
@@ -189,43 +190,77 @@ const Header = ({ onSearch = () => {} }) => {
           </button>
 
           {/* Menu Loại Sản Phẩm */}
-          <div className="menu-container" ref={menuRef} style={{ position: "relative" }}>
-            <div
-              className="btn"
+          <div
+            className="menu-container"
+            ref={menuRef}
+            style={{ position: "relative" }}
+          >
+            <button
               style={{
-                background: "linear-gradient(45deg, #1976d2, #00f2fe)",
+                background: isMenuOpen
+                  ? "linear-gradient(45deg, #1565c0, #00d4ff)"
+                  : "linear-gradient(45deg, #1976d2, #00f2fe)",
                 color: "white",
-                fontWeight: "bold",
+                fontWeight: "600",
                 border: "none",
-                borderRadius: "30px",
-                padding: "10px 20px",
-                boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
+                borderRadius: "8px",
+                padding: "12px 24px",
+                fontSize: "15px",
+                boxShadow: isMenuOpen
+                  ? "0 6px 20px rgba(25, 118, 210, 0.4)"
+                  : "0 4px 12px rgba(0, 0, 0, 0.15)",
                 cursor: "pointer",
+                transition: "all 0.3s ease",
+                display: "flex",
+                alignItems: "center",
+                gap: "8px",
               }}
               onClick={() => setIsMenuOpen(!isMenuOpen)}
             >
               DANH MỤC
-            </div>
+              <span
+                style={{
+                  transform: isMenuOpen ? "rotate(180deg)" : "rotate(0deg)",
+                  transition: "transform 0.3s ease",
+                  fontSize: "12px",
+                }}
+              >
+                ▼
+              </span>
+            </button>
 
             {isMenuOpen && (
               <div
                 className="custom-dropdown-menu"
                 style={{
                   position: "absolute",
-                  top: "100%",
+                  top: "calc(100% + 8px)",
                   left: 0,
                   background: "#fff",
-                  border: "1px solid #ddd",
-                  padding: "10px",
+                  border: "1px solid #e0e0e0",
+                  padding: "8px 0",
                   zIndex: 1000,
-                  minWidth: "200px",
-                  boxShadow: "0 2px 8px rgba(0,0,0,0.15)",
-                  borderRadius: "6px",
-                  marginTop: "5px",
+                  minWidth: "250px",
+                  boxShadow: "0 8px 32px rgba(0, 0, 0, 0.12)",
+                  borderRadius: "12px",
+                  animation: "slideDown 0.2s ease",
                 }}
               >
+                    <style>{`
+            @keyframes slideDown {
+              from {
+                opacity: 0;
+                transform: translateY(-10px);
+              }
+              to {
+                opacity: 1;
+                transform: translateY(0);
+              }
+            }
+          `}</style>
+
                 {categories.length > 0 ? (
-                  categories.map((cat) => (
+                  categories.map((cat, index) => (
                     <a
                       key={cat.id}
                       href="#"
@@ -235,27 +270,52 @@ const Header = ({ onSearch = () => {} }) => {
                         handleCategorySelect(cat.id);
                       }}
                       style={{
-                        display: "block",
-                        padding: "10px 15px",
+                        display: "flex",
+                        alignItems: "center",
+                        padding: "12px 16px",
                         textDecoration: "none",
                         color: "#333",
-                        borderRadius: "4px",
-                        transition: "background-color 0.2s",
+                        transition: "all 0.2s ease",
+                        borderLeft: "3px solid transparent",
+                        fontWeight: "500",
+                        fontSize: "14px",
                       }}
-                      onMouseEnter={(e) =>
-                        (e.target.style.backgroundColor = "#f0f0f0")
-                      }
-                      onMouseLeave={(e) =>
-                        (e.target.style.backgroundColor = "transparent")
-                      }
+                      onMouseEnter={(e) => {
+                        e.target.style.backgroundColor = "#f5f5f5";
+                        e.target.style.borderLeftColor = "#1976d2";
+                        e.target.style.paddingLeft = "20px";
+                      }}
+                      onMouseLeave={(e) => {
+                        e.target.style.backgroundColor = "transparent";
+                        e.target.style.borderLeftColor = "transparent";
+                        e.target.style.paddingLeft = "16px";
+                      }}
                     >
+                      <span style={{ marginRight: "10px", fontSize: "16px" }}>
+                        {index === 0
+                          ? ""
+                          : index === 1
+                          ? ""
+                          : index === 2
+                          ? ""
+                          : ""}
+                      </span>
                       {cat.name}
                     </a>
                   ))
                 ) : (
-                  <p style={{ padding: "10px", color: "#999" }}>
-                    Đang tải danh mục...
-                  </p>
+                  <div
+                    style={{
+                      padding: "24px 16px",
+                      textAlign: "center",
+                      color: "#999",
+                    }}
+                  >
+                    <div style={{ marginBottom: "8px" }}>⏳</div>
+                    <p style={{ margin: 0, fontSize: "14px" }}>
+                      Đang tải danh mục...
+                    </p>
+                  </div>
                 )}
               </div>
             )}

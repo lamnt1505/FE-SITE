@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import "../styles/CatalogPage/CatalogPage.css";
 import { insertCart } from "../redux/reducers/cartReducer";
 import { useDispatch, useSelector } from "react-redux";
@@ -10,6 +10,7 @@ import "react-toastify/dist/ReactToastify.css";
 
 const CatalogPage = () => {
   const { categoryID } = useParams();
+  const navigate = useNavigate();
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const dispatch = useDispatch();
@@ -17,35 +18,37 @@ const CatalogPage = () => {
   const [comparedProducts, setComparedProducts] = useState([]);
   const [showCompareModal, setShowCompareModal] = useState(false);
 
+  const thStyle = {
+    background: "#1976d2",
+    color: "white",
+    padding: "12px",
+    width: "200px",
+    border: "1px solid #ddd",
+  };
+
+  const tdStyle = {
+    padding: "12px",
+    border: "1px solid #ddd",
+    verticalAlign: "top",
+  };
+
   const handleBuy = (productID) => {
     dispatch(insertCart({ productID, amount: 1 }));
   };
 
   useEffect(() => {
     if (cartState.status === "succeeded") {
-        if (window.updateCartQuantity) {
-          window.updateCartQuantity();
-        }
+      if (window.updateCartQuantity) {
+        window.updateCartQuantity();
+      }
       toast.success(
         <div className="flex items-center space-x-2">
-          <span>SẢN PHẨM ĐÃ ĐƯỢC THÊM VÀO GIỎ HÀNG!</span>
+          <span>SẢN PHẨM ĐÃ ĐƯỢC THÊM VÀO GIỎ HÀNG</span>
         </div>
-        ,
-        {
-          style: {
-            background: "#111",
-            color: "#fff",
-            fontWeight: "bold",
-          },
-        }
       );
     } else if (cartState.status === "failed") {
-      toast.error("❌ Có lỗi khi thêm sản phẩm vào giỏ hàng!", {
-        style: {
-          background: "#111",
-          color: "#fff",
-          fontWeight: "bold",
-        },
+      toast.error("Có lỗi khi thêm sản phẩm vào giỏ hàng!", {
+        autoClose: 3000,
       });
     }
   }, [cartState.status]);
@@ -61,22 +64,35 @@ const CatalogPage = () => {
       .finally(() => setLoading(false));
   }, [categoryID]);
 
-  const handleCompare = (product) => {
+  const handleCompare = async (product) => {
     if (comparedProducts.some((p) => p.productID === product.productID)) {
-      toast.info("🔍 Sản phẩm này đã được thêm để so sánh!");
+      toast.info("Sản phẩm này đã có trong danh sách so sánh!");
       return;
     }
 
     if (comparedProducts.length === 2) {
-      toast.show("⚠️ Chỉ so sánh tối đa 2 sản phẩm mỗi lần!");
+      toast.info("Chỉ so sánh tối đa 2 sản phẩm!");
       return;
     }
 
-    const newList = [...comparedProducts, product];
-    setComparedProducts(newList);
+    try {
+      const res = await fetch(
+        `${API_BASE_URL}/api/v1/product/${product.productID}/get`
+      );
+      if (!res.ok)
+        throw new Error("Không lấy được thông tin chi tiết sản phẩm");
 
-    if (newList.length === 2) {
-      setShowCompareModal(true);
+      const fullProduct = await res.json();
+
+      const newList = [...comparedProducts, fullProduct];
+      setComparedProducts(newList);
+
+      if (newList.length === 2) {
+        setShowCompareModal(true);
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error("Lỗi khi tải thông tin sản phẩm!");
     }
   };
 
@@ -97,7 +113,7 @@ const CatalogPage = () => {
     >
       <Breadcrumb />
       <div
-        className="product-category-title text-center mb-4"
+        className="product-category-title text-center mb-5"
         style={{
           width: "100%",
         }}
@@ -105,39 +121,110 @@ const CatalogPage = () => {
         <h2
           style={{
             fontFamily: "Poppins, sans-serif",
-            fontWeight: "400",
-            fontSize: "2.2rem",
+            fontWeight: "600",
+            fontSize: "2.5rem",
             letterSpacing: "0.5px",
-            color: "#222",
+            color: "#1976d2",
             marginBottom: "0",
             display: "inline-block",
-            borderBottom: "2px solid #1976d2",
-            paddingBottom: "8px",
+            borderBottom: "3px solid #19d2c3",
+            paddingBottom: "12px",
           }}
         >
-          SẢN PHẨM THEO DANH MỤC #{categoryID}
+          SẢN PHẨM DANH MỤC #{categoryID}
         </h2>
       </div>
+
       <div style={{ width: "100%", clear: "both" }}>
         {products.length === 0 ? (
-          <div className="toast toast-info text-center">
-            Không có sản phẩm nào trong danh mục này.
+          <div
+            style={{
+              textAlign: "center",
+              padding: "60px 20px",
+              backgroundColor: "#f5f5f5",
+              borderRadius: "12px",
+              color: "#999",
+            }}
+          >
+            <p style={{ fontSize: "18px", marginBottom: "10px" }}>🛍️</p>
+            <p style={{ fontSize: "16px", margin: 0 }}>
+              Không có sản phẩm nào trong danh mục này.
+            </p>
           </div>
         ) : (
           <div className="table-responsive">
-            <table className="table table-bordered align-middle text-center shadow-sm">
-              <thead className="table-light">
-                <tr>
-                  <th style={{ width: "120px" }}>Hình ảnh</th>
-                  <th>Tên sản phẩm</th>
-                  <th style={{ width: "150px" }}>Giá</th>
-                  <th style={{ width: "180px" }}>Thao tác</th>
+            <table
+              className="table"
+              style={{
+                borderCollapse: "collapse",
+                backgroundColor: "#fff",
+                borderRadius: "12px",
+                overflow: "hidden",
+                boxShadow: "0 4px 20px rgba(0,0,0,0.08)",
+              }}
+            >
+              <thead>
+                <tr
+                  style={{
+                    background: "linear-gradient(90deg, #1976d2, #1565c0)",
+                    color: "white",
+                    fontWeight: "600",
+                    fontSize: "15px",
+                  }}
+                >
+                  <th
+                    style={{
+                      padding: "16px",
+                      textAlign: "center",
+                      width: "120px",
+                    }}
+                  >
+                    Hình ảnh
+                  </th>
+                  <th style={{ padding: "16px", textAlign: "left" }}>
+                    Tên sản phẩm
+                  </th>
+                  <th
+                    style={{
+                      padding: "16px",
+                      textAlign: "center",
+                      width: "150px",
+                    }}
+                  >
+                    Giá
+                  </th>
+                  <th
+                    style={{
+                      padding: "16px",
+                      textAlign: "center",
+                      width: "280px",
+                    }}
+                  >
+                    Thao tác
+                  </th>
                 </tr>
               </thead>
               <tbody>
-                {products.map((item) => (
-                  <tr key={item.productID}>
-                    <td>
+                {products.map((item, index) => (
+                  <tr
+                    key={item.productID}
+                    style={{
+                      borderBottom: "1px solid #e0e0e0",
+                      transition: "all 0.3s ease",
+                      backgroundColor: index % 2 === 0 ? "#ffffff" : "#f9f9f9",
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.backgroundColor = "#f0f7ff";
+                      e.currentTarget.style.boxShadow =
+                        "inset 0 0 0 1px #e3f2fd";
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.backgroundColor =
+                        index % 2 === 0 ? "#ffffff" : "#f9f9f9";
+                      e.currentTarget.style.boxShadow = "none";
+                    }}
+                  >
+                    <td style={{ padding: "12px", textAlign: "center" }}>
                       <img
                         src={item.imageBase64}
                         alt={item.productName}
@@ -146,14 +233,24 @@ const CatalogPage = () => {
                           height: "80px",
                           objectFit: "cover",
                           borderRadius: "8px",
+                          border: "1px solid #e0e0e0",
+                          transition: "transform 0.3s ease",
+                          cursor: "pointer",
+                        }}
+                        onMouseEnter={(e) => {
+                          e.target.style.transform = "scale(1.05)";
+                        }}
+                        onMouseLeave={(e) => {
+                          e.target.style.transform = "scale(1)";
                         }}
                       />
                     </td>
                     <td
                       style={{
-                        fontWeight: "500",
-                        fontSize: "1rem",
-                        color: "#333",
+                        padding: "12px",
+                        fontWeight: "600",
+                        fontSize: "15px",
+                        color: "#222",
                         textAlign: "left",
                       }}
                     >
@@ -161,29 +258,115 @@ const CatalogPage = () => {
                     </td>
                     <td
                       style={{
-                        fontWeight: "600",
+                        padding: "12px",
+                        fontWeight: "700",
+                        fontSize: "16px",
                         color: "#1976d2",
+                        textAlign: "center",
                       }}
                     >
                       {item.price
                         ? `${item.price.toLocaleString("vi-VN")} VND`
                         : "—"}
                     </td>
-                    <td>
-                      <button
-                        className="btn btn-primary btn-sm me-2"
-                        onClick={() => handleBuy(item.productID)}
-                        disabled={cartState.status === "loading"}
+                    <td style={{ padding: "12px", textAlign: "center" }}>
+                      <div
+                        style={{
+                          display: "flex",
+                          gap: "8px",
+                          justifyContent: "center",
+                        }}
                       >
-                        {cartState.status === "loading"
-                          ? "Đang thêm..."
-                          : "Mua ngay"}
-                      </button>
-                      <button className="btn btn-outline-secondary btn-sm"
-                      onClick={() => handleCompare(item)}
-                      >
-                        So sánh
-                      </button>
+                        <button
+                          onClick={() => handleBuy(item.productID)}
+                          disabled={cartState.status === "loading"}
+                          style={{
+                            flex: 1,
+                            backgroundColor: "#ff6b6b",
+                            color: "white",
+                            border: "none",
+                            borderRadius: "6px",
+                            padding: "8px 12px",
+                            fontWeight: "600",
+                            fontSize: "13px",
+                            cursor: "pointer",
+                            transition: "all 0.3s ease",
+                            opacity: cartState.status === "loading" ? 0.6 : 1,
+                          }}
+                          onMouseEnter={(e) => {
+                            if (cartState.status !== "loading") {
+                              e.target.style.backgroundColor = "#ff5252";
+                              e.target.style.transform = "translateY(-2px)";
+                              e.target.style.boxShadow =
+                                "0 4px 12px rgba(255, 107, 107, 0.4)";
+                            }
+                          }}
+                          onMouseLeave={(e) => {
+                            e.target.style.backgroundColor = "#ff6b6b";
+                            e.target.style.transform = "translateY(0)";
+                            e.target.style.boxShadow = "none";
+                          }}
+                        >
+                          {cartState.status === "loading" ? "Đang..." : "Mua"}
+                        </button>
+                        <button
+                          onClick={() => handleCompare(item)}
+                          style={{
+                            flex: 1,
+                            backgroundColor: "#f0f0f0",
+                            color: "#333",
+                            border: "1px solid #ddd",
+                            borderRadius: "6px",
+                            padding: "8px 12px",
+                            fontWeight: "600",
+                            fontSize: "13px",
+                            cursor: "pointer",
+                            transition: "all 0.3s ease",
+                          }}
+                          onMouseEnter={(e) => {
+                            e.target.style.backgroundColor = "#e3f2fd";
+                            e.target.style.borderColor = "#1976d2";
+                            e.target.style.color = "#1976d2";
+                            e.target.style.transform = "translateY(-2px)";
+                          }}
+                          onMouseLeave={(e) => {
+                            e.target.style.backgroundColor = "#f0f0f0";
+                            e.target.style.borderColor = "#ddd";
+                            e.target.style.color = "#333";
+                            e.target.style.transform = "translateY(0)";
+                          }}
+                        >
+                          So sánh
+                        </button>
+                        <button
+                          onClick={() => navigate(`/product/${item.productID}`)}
+                          style={{
+                            flex: 1,
+                            backgroundColor: "#19d2c3",
+                            color: "white",
+                            border: "none",
+                            borderRadius: "6px",
+                            padding: "8px 12px",
+                            fontWeight: "600",
+                            fontSize: "13px",
+                            cursor: "pointer",
+                            transition: "all 0.3s ease",
+                          }}
+                          onMouseEnter={(e) => {
+                            e.target.style.backgroundColor = "#00bfb3";
+                            e.target.style.transform = "translateY(-2px)";
+                            e.target.style.boxShadow =
+                              "0 4px 12px rgba(25, 210, 195, 0.4)";
+                          }}
+                          onMouseLeave={(e) => {
+                            e.target.style.backgroundColor = "#19d2c3";
+                            e.target.style.transform = "translateY(0)";
+                            e.target.style.boxShadow = "none";
+                          }}
+                        >
+                          Chi tiết
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -191,7 +374,8 @@ const CatalogPage = () => {
             </table>
           </div>
         )}
-        </div>
+      </div>
+
       {showCompareModal && comparedProducts.length === 2 && (
         <div
           style={{
@@ -200,31 +384,36 @@ const CatalogPage = () => {
             left: 0,
             width: "100vw",
             height: "100vh",
-            background: "rgba(0,0,0,0.6)",
+            background: "rgba(0,0,0,0.55)",
             display: "flex",
             justifyContent: "center",
             alignItems: "center",
-            zIndex: 1000,
+            zIndex: 2000,
+            padding: "10px",
           }}
           onClick={handleCloseCompare}
         >
           <div
             onClick={(e) => e.stopPropagation()}
             style={{
+              position: "relative",
               background: "#fff",
               borderRadius: "10px",
-              padding: "24px",
-              width: "90%",
-              maxWidth: "900px",
-              boxShadow: "0 4px 12px rgba(0,0,0,0.3)",
+              padding: "20px",
+              width: "95%",
+              maxWidth: "800px", 
+              maxHeight: "85vh",
+              overflowY: "auto",
+              boxShadow: "0 4px 18px rgba(0,0,0,0.25)",
             }}
           >
+            {/* CLOSE BUTTON */}
             <button
               onClick={handleCloseCompare}
               style={{
                 position: "absolute",
-                top: "20px",
-                right: "30px",
+                top: "10px",
+                right: "15px",
                 fontSize: "28px",
                 border: "none",
                 background: "transparent",
@@ -234,46 +423,164 @@ const CatalogPage = () => {
               &times;
             </button>
 
-            <h3 className="text-center mb-4">SO SÁNH SẢN PHẨM</h3>
-
-            <div
+            <h2
               style={{
-                display: "flex",
-                justifyContent: "space-around",
-                gap: "20px",
+                textAlign: "center",
+                marginBottom: "20px",
+                fontSize: "22px",
+                fontWeight: "700",
               }}
             >
-              {comparedProducts.map((p) => (
-                <div
-                  key={p.productID}
-                  style={{
-                    flex: 1,
-                    border: "1px solid #ddd",
-                    borderRadius: "8px",
-                    padding: "16px",
-                    textAlign: "center",
-                  }}
-                >
-                  <img
-                    src={p.imageBase64}
-                    alt={p.productName}
-                    style={{
-                      width: "100%",
-                      maxWidth: "180px",
-                      height: "180px",
-                      objectFit: "cover",
-                      marginBottom: "10px",
-                      borderRadius: "8px",
-                    }}
-                  />
-                  <h5>{p.productName}</h5>
-                  <p style={{ color: "#1976d2", fontWeight: "600" }}>
-                    {p.price?.toLocaleString("vi-VN")} VND
-                  </p>
-                  <p>{p.description || "Không có mô tả"}</p>
-                </div>
-              ))}
-            </div>
+              SO SÁNH SẢN PHẨM
+            </h2>
+
+            {/* ===== BẢNG SO SÁNH ===== */}
+            <table
+              style={{
+                width: "100%",
+                borderCollapse: "collapse",
+              }}
+            >
+              <tbody>
+                {/* ẢNH */}
+                <tr>
+                  <th style={thStyle}>Hình ảnh</th>
+                  {comparedProducts.map((p) => (
+                    <td key={p.id} style={tdStyle}>
+                      <img
+                        src={p.image || p.image1 || p.imageBase64}
+                        alt={p.name}
+                        style={{
+                          width: "120px", // 🔥 GIẢM TỪ 150px
+                          height: "120px",
+                          objectFit: "contain",
+                          borderRadius: "8px",
+                        }}
+                      />
+                    </td>
+                  ))}
+                </tr>
+
+                {/* TÊN */}
+                <tr>
+                  <th style={thStyle}>Tên sản phẩm</th>
+                  {comparedProducts.map((p) => (
+                    <td key={p.id} style={tdStyle}>
+                      <strong>{p.name}</strong>
+                    </td>
+                  ))}
+                </tr>
+
+                {/* GIÁ */}
+                <tr>
+                  <th style={thStyle}>Giá</th>
+                  {comparedProducts.map((p) => (
+                    <td key={p.id} style={tdStyle}>
+                      {p.price ? p.price.toLocaleString("vi-VN") + " VND" : "—"}
+                    </td>
+                  ))}
+                </tr>
+
+                {/* THƯƠNG HIỆU */}
+                <tr>
+                  <th style={thStyle}>Thương hiệu</th>
+                  {comparedProducts.map((p) => (
+                    <td key={p.id} style={tdStyle}>
+                      {p.tradeName}
+                    </td>
+                  ))}
+                </tr>
+
+                {/* DANH MỤC */}
+                <tr>
+                  <th style={thStyle}>Danh mục</th>
+                  {comparedProducts.map((p) => (
+                    <td key={p.id} style={tdStyle}>
+                      {p.categoryname}
+                    </td>
+                  ))}
+                </tr>
+
+                {/* MÔ TẢ */}
+                <tr>
+                  <th style={thStyle}>Mô tả</th>
+                  {comparedProducts.map((p) => (
+                    <td key={p.id} style={tdStyle}>
+                      {p.description || "Không có mô tả"}
+                    </td>
+                  ))}
+                </tr>
+
+                {/* PHIÊN BẢN */}
+                <tr>
+                  <th style={thStyle}>Phiên bản</th>
+                  {comparedProducts.map((p) => (
+                    <td key={p.id} style={tdStyle}>
+                      {p.productVersions?.length > 0 ? (
+                        <ul style={{ paddingLeft: "20px", margin: 0 }}>
+                          {p.productVersions.map((v) => (
+                            <li key={v.versionID}>
+                              {v.memory} – {v.color}
+                            </li>
+                          ))}
+                        </ul>
+                      ) : (
+                        "Không có phiên bản"
+                      )}
+                    </td>
+                  ))}
+                </tr>
+
+                {/* CHI TIẾT KỸ THUẬT */}
+                <tr>
+                  <th style={thStyle}>Chi tiết kỹ thuật</th>
+                  {comparedProducts.map((p) => (
+                    <td key={p.id} style={tdStyle}>
+                      {p.productDetails?.length > 0 ? (
+                        <div>
+                          {p.productDetails.map((d) => (
+                            <div
+                              key={d.productDetailID}
+                              style={{
+                                marginBottom: "8px",
+                                padding: "8px",
+                                borderRadius: "6px",
+                                background: "#f7f7f7",
+                                border: "1px solid #ddd",
+                                fontSize: "14px",
+                              }}
+                            >
+                              {d.productCamera && (
+                                <p>
+                                  <b>Camera:</b> {d.productCamera}
+                                </p>
+                              )}
+                              {d.productWifi && (
+                                <p>
+                                  <b>Wifi:</b> {d.productWifi}
+                                </p>
+                              )}
+                              {d.productScreen && (
+                                <p>
+                                  <b>Màn hình:</b> {d.productScreen}
+                                </p>
+                              )}
+                              {d.productBluetooth && (
+                                <p>
+                                  <b>Bluetooth:</b> {d.productBluetooth}
+                                </p>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        "Không có thông tin chi tiết"
+                      )}
+                    </td>
+                  ))}
+                </tr>
+              </tbody>
+            </table>
           </div>
         </div>
       )}

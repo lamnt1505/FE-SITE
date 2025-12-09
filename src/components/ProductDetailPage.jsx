@@ -82,7 +82,7 @@ const ProductDetailPage = () => {
       );
 
       if (res.ok) {
-        toast.success("🛒 Sản phẩm đã được thêm vào giỏ hàng!");
+        toast.success("Sản phẩm đã được thêm vào giỏ hàng!");
         if (window.updateCartQuantity) {
           window.updateCartQuantity();
         }
@@ -251,9 +251,9 @@ const ProductDetailPage = () => {
                     <Typography sx={{ mb: 1 }}>{vote.comment}</Typography>
 
                     <Typography fontSize={13} color="gray">
-                      👤 Người dùng: {vote.accountID || "Ẩn danh"}
+                      Người dùng: {vote.accountID || "Ẩn danh"}
                       <br />
-                      🕒 Ngày:{" "}
+                      Ngày:{" "}
                       {new Date(vote.createdAt).toLocaleDateString("vi-VN")}
                     </Typography>
                   </Box>

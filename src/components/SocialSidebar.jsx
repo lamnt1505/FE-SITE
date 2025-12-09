@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { ref, onValue, push, set } from "firebase/database";
 import { db } from "../FirebaseConfig/firebaseConfig";
 import "../styles/ChatBox/ChatBox.css";
+import { toast } from "react-toastify";
 
 const ChatWindow = ({ onClose }) => {
   const [message, setMessage] = useState("");
@@ -32,7 +33,10 @@ const ChatWindow = ({ onClose }) => {
   };
 
   const handleSend = async () => {
-    if (!message.trim()) return;
+    if (!message.trim()) {
+      toast.warning("Vui lòng nhập tin nhắn!");
+      return;
+    }
     setSending(true);
     try {
       const chatRef = ref(db, `chat/conversations/${sender}`);
@@ -55,7 +59,7 @@ const ChatWindow = ({ onClose }) => {
   return (
     <div className="chat-window">
       <div className="chat-header">
-        <h3>💬 Hỗ trợ trực tuyến</h3>
+        <h3>Hỗ trợ trực tuyến</h3>
         <button onClick={onClose} className="chat-close-btn">
           &times;
         </button>
@@ -63,7 +67,7 @@ const ChatWindow = ({ onClose }) => {
       <div className="chat-body">
         {messages.length === 0 ? (
           <p className="text-muted">
-            👉 Hãy bắt đầu trò chuyện với nhân viên hỗ trợ...
+            Hãy bắt đầu trò chuyện với nhân viên hỗ trợ...
           </p>
         ) : (
           messages.map((m, i) => (
@@ -103,7 +107,7 @@ const SocialSidebar = () => {
       <div className="chat-bubble-container">
         <div className="chat-bubble-label">Nhắn tới nhân viên</div>
         <div className="chat-bubble" onClick={() => setIsChatOpen(!isChatOpen)}>
-          💬
+          <i className="fas fa-comments"></i>
         </div>
       </div>
       {isChatOpen && <ChatWindow onClose={() => setIsChatOpen(false)} />}

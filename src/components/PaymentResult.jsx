@@ -4,7 +4,7 @@ import API_BASE_URL from "../config/config.js";
 
 export default function PaymentResult() {
   const [result, setResult] = useState(null);
-  const [countdown, setCountdown] = useState(60);
+  const [countdown, setCountdown] = useState(30);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -42,15 +42,8 @@ export default function PaymentResult() {
           <h2 style={{ color: "green" }}>{result.message}</h2>
           <div
             style={{
-              backgroundColor: "#e8f5e9",
-              border: "1px solid #4caf50",
-              borderRadius: 8,
-              padding: 12,
-              marginTop: 10,
-              marginBottom: 15,
-              display: "flex",
-              alignItems: "center",
-              gap: 10,
+              backgroundColor: "#e8f5e9", border: "1px solid #4caf50", borderRadius: 8, padding: 12,
+              marginTop: 10, marginBottom: 15, display: "flex", alignItems: "center", gap: 10,
             }}
           >
             <span style={{ fontSize: 18 }}>✉️</span>
@@ -64,12 +57,9 @@ export default function PaymentResult() {
           {result.products && result.products.length > 0 && (
             <div
               style={{
-                backgroundColor: "#f9f9f9",
-                padding: 15,
-                borderRadius: 8,
-                marginTop: 15,
-                marginBottom: 15,
-                border: "1px solid #e0e0e0",
+                backgroundColor: "#f9f9f9", padding: 15,
+                borderRadius: 8,marginTop: 15,
+                marginBottom: 15, border: "1px solid #e0e0e0",
               }}
             >
               <h3 style={{ marginTop: 0, marginBottom: 10 }}>
@@ -84,9 +74,7 @@ export default function PaymentResult() {
                       index < result.products.length - 1
                         ? "1px solid #e0e0e0"
                         : "none",
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "center",
+                    display: "flex", justifyContent: "space-between", alignItems: "center",
                   }}
                 >
                   <div style={{ flex: 1 }}>
@@ -113,17 +101,12 @@ export default function PaymentResult() {
           <h2 style={{ color: "red" }}>❌ {result.message}</h2>
           <div
             style={{
-              backgroundColor: "#ffebee",
-              border: "1px solid #f44336",
-              borderRadius: 8,
-              padding: 12,
-              marginTop: 10,
-              marginBottom: 15,
-              color: "#c62828",
+              backgroundColor: "#ffebee", border: "1px solid #f44336",
+              borderRadius: 8, padding: 12, marginTop: 10, marginBottom: 15, color: "#c62828",
             }}
           >
             <p style={{ margin: 0 }}>
-              ⚠️ Giao dịch không thành công. Vui lòng thử lại hoặc liên hệ hỗ
+              Giao dịch không thành công. Vui lòng thử lại hoặc liên hệ hỗ
               trợ.
             </p>
           </div>
@@ -149,13 +132,8 @@ export default function PaymentResult() {
         onClick={() => navigate("/myorder")}
         className="btn"
         style={{
-          background: "linear-gradient(45deg, #4facfe, #00f2fe)",
-          color: "white",
-          fontWeight: "bold",
-          border: "none",
-          borderRadius: "30px",
-          padding: "8px 20px",
-          boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
+          background: "linear-gradient(45deg, #4facfe, #00f2fe)", color: "white",
+          fontWeight: "bold", border: "none", borderRadius: "30px", padding: "8px 20px", boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
           cursor: "pointer",
         }}
       >

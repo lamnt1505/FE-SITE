@@ -88,7 +88,7 @@ const MyOrdersPage = () => {
     if (!orderToCancel) return;
 
     if (!cancelReason.trim()) {
-      toast.error("⚠ Vui lòng nhập lý do hủy đơn hàng");
+      toast.error("Vui lòng nhập lý do hủy đơn hàng");
       return;
     }
 
@@ -112,8 +112,8 @@ const MyOrdersPage = () => {
       }
 
       if (res.ok) {
-        toast.success(result?.message || "✅ Đơn hàng đã được hủy thành công!");
-        toast.info("📧 Email xác nhận hủy đã được gửi", { autoClose: 2000 });
+        toast.success(result?.message || "Đơn hàng đã được hủy thành công!");
+        toast.info("Email xác nhận hủy đã được gửi", { autoClose: 2000 });
         setOrders((prev) =>
           prev.map((order) =>
             order.orderId === orderToCancel
@@ -122,7 +122,7 @@ const MyOrdersPage = () => {
           )
         );
       } else {
-        toast.error(result?.message || "❌ Không thể hủy đơn hàng");
+        toast.error(result?.message || "Không thể hủy đơn hàng");
       }
     } catch (err) {
       console.error("Lỗi khi hủy đơn hàng:", err);
@@ -176,7 +176,7 @@ const MyOrdersPage = () => {
         <div key={order.orderId} className="col-md-4 col-lg-3">
           <div className="card shadow-sm h-100">
             <div className="card-body">
-              <h6 className="card-title">ĐƠN #{order.orderId}</h6>
+              <h6 className="card-title">ĐƠN #{ order.orderNumber} (ID: {order.orderId})</h6>
               {order.txnRef && (
                 <p className="mb-1 text-muted" style={{ fontSize: "0.85rem" }}>
                   <strong>MÃ GIAO DỊCH:</strong> {order.txnRef}

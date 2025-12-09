@@ -17,7 +17,7 @@ const RegisterPage = () => {
 
   const [image, setImage] = useState(null);
   const [message, setMessage] = useState("");
-  const [messageType, setMessageType] = useState(""); // "success" hoặc "error"
+  const [messageType, setMessageType] = useState("");
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -52,81 +52,71 @@ const RegisterPage = () => {
     e.preventDefault();
     setMessage("");
 
-    // Validate tên đăng nhập
     if (!formData.accountName || formData.accountName.trim().length < 3) {
-      showMessage("❌ Tên đăng nhập phải có ít nhất 3 ký tự!", "error");
+      showMessage("Tên đăng nhập phải có ít nhất 3 ký tự!", "error");
       return;
     }
 
-    // Validate mật khẩu
     if (!formData.accountPass || formData.accountPass.length < 6) {
-      showMessage("❌ Mật khẩu phải có ít nhất 6 ký tự!", "error");
+      showMessage("Mật khẩu phải có ít nhất 6 ký tự!", "error");
       return;
     }
 
     if (!validatePassword(formData.accountPass)) {
-      showMessage("❌ Mật khẩu phải có ít nhất 1 chữ hoa hoặc 1 ký tự đặc biệt!", "error");
+      showMessage("Mật khẩu phải có ít nhất 1 chữ hoa hoặc 1 ký tự đặc biệt!", "error");
       return;
     }
 
-    // Validate họ tên
     if (!formData.username || formData.username.trim().length < 2) {
-      showMessage("❌ Họ tên phải có ít nhất 2 ký tự!", "error");
+      showMessage("Họ tên phải có ít nhất 2 ký tự!", "error");
       return;
     }
 
-    // Validate email - BẮT BUỘC
     if (!formData.email || formData.email.trim() === "") {
-      showMessage("❌ Vui lòng nhập email!", "error");
+      showMessage("Vui lòng nhập email!", "error");
       return;
     }
 
     if (!validateEmail(formData.email)) {
-      showMessage("❌ Email không hợp lệ! Vui lòng nhập đúng định dạng (vd: example@gmail.com)", "error");
+      showMessage("Email không hợp lệ! Vui lòng nhập đúng định dạng (vd: example@gmail.com)", "error");
       return;
     }
 
-    // Validate số điện thoại - BẮT BUỘC
     if (!formData.phoneNumber || formData.phoneNumber.trim() === "") {
-      showMessage("❌ Vui lòng nhập số điện thoại!", "error");
+      showMessage("Vui lòng nhập số điện thoại!", "error");
       return;
     }
 
     if (!validatePhoneNumber(formData.phoneNumber)) {
-      showMessage("❌ Số điện thoại phải có 10-11 chữ số!", "error");
+      showMessage("Số điện thoại phải có 10-11 chữ số!", "error");
       return;
     }
 
-    // Validate ngày sinh
     if (!formData.dateOfBirth) {
-      showMessage("❌ Vui lòng chọn ngày sinh!", "error");
+      showMessage("Vui lòng chọn ngày sinh!", "error");
       return;
     }
 
-    // Kiểm tra tuổi (phải >= 13 tuổi)
     const birthDate = new Date(formData.dateOfBirth);
     const today = new Date();
     const age = today.getFullYear() - birthDate.getFullYear();
     if (age < 13) {
-      showMessage("❌ Bạn phải ít nhất 13 tuổi để đăng ký!", "error");
+      showMessage("Bạn phải ít nhất 13 tuổi để đăng ký!", "error");
       return;
     }
 
-    // Validate địa chỉ
     if (!formData.local || formData.local.trim() === "") {
-      showMessage("❌ Vui lòng nhập địa chỉ!", "error");
+      showMessage("Vui lòng nhập địa chỉ!", "error");
       return;
     }
 
-    // Validate ảnh
     if (!image) {
-      showMessage("❌ Vui lòng chọn ảnh đại diện!", "error");
+      showMessage("Vui lòng chọn ảnh đại diện!", "error");
       return;
     }
 
-    // Kiểm tra kích thước file (tối đa 5MB)
     if (image.size > 5 * 1024 * 1024) {
-      showMessage("❌ Kích thước ảnh không được vượt quá 5MB!", "error");
+      showMessage("Kích thước ảnh không được vượt quá 5MB!", "error");
       return;
     }
 
@@ -151,15 +141,15 @@ const RegisterPage = () => {
         const result = await res.json();
 
         if (!res.ok) {
-          showMessage(`❌ ${result.message || "Đăng ký thất bại!"}`, "error");
+          showMessage(`${result.message || "Đăng ký thất bại!"}`, "error");
           return;
         }
 
-        showMessage(`✅ ${result.message || "Đăng ký thành công!"}`, "success");
+        showMessage(`${result.message || "Đăng ký thành công!"}`, "success");
         setTimeout(() => navigate("/login"), 2000);
       } catch (err) {
         console.error("Lỗi đăng ký:", err);
-        showMessage("❌ Có lỗi kết nối server, vui lòng thử lại!", "error");
+        showMessage("Có lỗi kết nối server, vui lòng thử lại!", "error");
       }
     };
 

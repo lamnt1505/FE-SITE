@@ -26,6 +26,7 @@ import { Toast } from "bootstrap";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import "../styles/product/Productgirl.css";
+import "../styles/product/PaginationStyles.css";
 import API_BASE_URL from "../config/config.js";
 
 const ProductGrid = ({ searchKey }) => {
@@ -106,6 +107,10 @@ const ProductGrid = ({ searchKey }) => {
   });
 
   const fetchProductsDefault = async (pageNum = 0) => {
+    const productGrid = document.querySelector(".product-grid");
+    if (productGrid) {
+      productGrid.classList.add("is-loading");
+    }
     setLoading(true);
     try {
       const res = await fetch(
@@ -122,6 +127,9 @@ const ProductGrid = ({ searchKey }) => {
       setProducts([]);
     } finally {
       setLoading(false);
+      if (productGrid) {
+        productGrid.classList.remove("is-loading");
+      }
     }
   };
 
@@ -135,7 +143,6 @@ const ProductGrid = ({ searchKey }) => {
       setLoading(true);
       setMessage("");
       try {
-        console.log("🔍 Gọi API tìm kiếm với key:", searchKey);
         const response = await fetch(`${API_BASE_URL}/api/v1/product/search`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -152,7 +159,6 @@ const ProductGrid = ({ searchKey }) => {
         const data = await response.json();
         setProducts(data.map(mapProduct));
       } catch (error) {
-        console.error("🚫 Lỗi fetch sản phẩm:", error);
         setMessage("Đã xảy ra lỗi khi tìm kiếm sản phẩm.");
       } finally {
         setLoading(false);
@@ -350,21 +356,37 @@ const ProductGrid = ({ searchKey }) => {
     }
   };
 
-  const handleCompare = (product) => {
+  const getProductDetail = async (id) => {
+    try {
+      const res = await fetch(`http://localhost:8080/api/v1/product/${id}/get`);
+      if (!res.ok) throw new Error("Lỗi API!");
+      return await res.json();
+    } catch (err) {
+      console.error("Lỗi khi gọi API lấy sản phẩm:", err);
+      return null;
+    }
+  };
+
+  const handleCompare = async (product) => {
     if (comparedProducts.some((p) => p.id === product.id)) {
-      toast.info("🔍 Sản phẩm này đã được thêm để so sánh!");
+      toast.info("Sản phẩm này đã được thêm để so sánh!");
       return;
     }
-
     if (comparedProducts.length === 2) {
-      toast.show("⚠️ Chỉ so sánh tối đa 2 sản phẩm mỗi lần!");
+      toast.show("Chỉ so sánh tối đa 2 sản phẩm mỗi lần!");
       return;
     }
 
-    const newList = [...comparedProducts, product];
-    setComparedProducts(newList);
+    const fullProduct = await getProductDetail(product.id);
+    if (!fullProduct) {
+      toast.error("Không lấy được thông tin sản phẩm!");
+      return;
+    }
 
-    if (newList.length === 2) {
+    const updatedList = [...comparedProducts, fullProduct];
+    setComparedProducts(updatedList);
+
+    if (updatedList.length === 2) {
       setShowCompareModal(true);
     }
   };
@@ -387,14 +409,14 @@ const ProductGrid = ({ searchKey }) => {
           }}
         >
           {[
-            { label: "LỌC THEO DANH MỤC:" },
+            { label: "LỌC THEO DANH MỤC:", disabled: true },
             { label: "GIÁ THẤP ĐẾN CAO", onClick: fetchPriceAsc },
             { label: "GIÁ CAO ĐẾN THẤP", onClick: fetchPriceDesc },
             { label: "SẢN PHẨM MỚI / TỐT NHẤT", onClick: fetchNewBest },
           ].map((btn, index) => (
             <Button
               key={index}
-              variant="contained"
+              variant={btn.disabled ? "text" : "contained"}
               size="small"
               sx={{
                 textTransform: "none",
@@ -466,6 +488,7 @@ const ProductGrid = ({ searchKey }) => {
                   <FavoriteBorderIcon />
                 )}
               </div>
+
               {/* Search icon */}
               <div
                 style={{
@@ -614,6 +637,7 @@ const ProductGrid = ({ searchKey }) => {
             </Button>
           </DialogActions>
         </Dialog>
+
         <Dialog
           open={openDetail}
           onClose={() => setOpenDetail(false)}
@@ -659,9 +683,7 @@ const ProductGrid = ({ searchKey }) => {
                     marginBottom: "16px",
                   }}
                 >
-                  <Typography fontWeight="bold">
-                    CHI NHÁNH CỬA HÀNG
-                  </Typography>
+                  <Typography fontWeight="bold">CHI NHÁNH CỬA HÀNG</Typography>
                   <Typography sx={{ fontSize: 14, color: "gray", mb: 1 }}>
                     CÓ{" "}
                     <span style={{ color: "blue", fontWeight: "bold" }}>
@@ -740,6 +762,7 @@ const ProductGrid = ({ searchKey }) => {
             <Button onClick={() => setOpenDetail(false)}>ĐÓNG</Button>
           </DialogActions>
         </Dialog>
+
         <Dialog
           open={openCategoryDialog}
           onClose={() => setOpenCategoryDialog(false)}
@@ -774,14 +797,13 @@ const ProductGrid = ({ searchKey }) => {
         </Dialog>
       </div>
 
-      <div className="pagination center">
+      <div className="pagination-container">
         {totalPages > 1 && (
           <div
             style={{
               display: "flex",
               justifyContent: "center",
               alignItems: "center",
-              marginTop: "30px",
               gap: "8px",
               flexWrap: "wrap",
             }}
@@ -790,12 +812,23 @@ const ProductGrid = ({ searchKey }) => {
               variant="outlined"
               size="small"
               disabled={currentPage === 0}
-              onClick={() => fetchProductsDefault(currentPage - 1)}
-              sx={{ textTransform: "none", borderRadius: "20px", px: 2 }}
+              onClick={() => {
+                fetchProductsDefault(currentPage - 1);
+              }}
+              className="pagination-btn"
+              sx={{
+                textTransform: "none",
+                borderRadius: "20px",
+                px: 2,
+                fontWeight: "600",
+                fontSize: "0.9rem",
+                "&:hover": {
+                  backgroundColor: "rgba(25, 118, 210, 0.08)",
+                },
+              }}
             >
               ◀ Trang trước
             </Button>
-
             <div style={{ display: "flex", gap: "6px", flexWrap: "wrap" }}>
               {Array.from({ length: totalPages }, (_, i) => (
                 <Button
@@ -803,12 +836,26 @@ const ProductGrid = ({ searchKey }) => {
                   variant={i === currentPage ? "contained" : "outlined"}
                   color={i === currentPage ? "primary" : "inherit"}
                   size="small"
+                  className={`pagination-page-btn ${
+                    i === currentPage ? "active" : ""
+                  }`}
                   sx={{
-                    minWidth: "35px",
+                    minWidth: "40px",
+                    height: "40px",
                     borderRadius: "50%",
                     fontWeight: i === currentPage ? "bold" : "normal",
+                    fontSize: "0.95rem",
+                    padding: 0,
+                    transition: "all 0.2s ease",
+                    ...(i === currentPage && {
+                      background:
+                        "linear-gradient(45deg, #2196F3 30%, #21CBF3 90%)",
+                      boxShadow: "0 4px 12px rgba(25, 118, 210, 0.4)",
+                    }),
                   }}
-                  onClick={() => fetchProductsDefault(i)}
+                  onClick={() => {
+                    fetchProductsDefault(i);
+                  }}
                 >
                   {i + 1}
                 </Button>
@@ -819,8 +866,20 @@ const ProductGrid = ({ searchKey }) => {
               variant="outlined"
               size="small"
               disabled={currentPage === totalPages - 1}
-              onClick={() => fetchProductsDefault(currentPage + 1)}
-              sx={{ textTransform: "none", borderRadius: "20px", px: 2 }}
+              onClick={() => {
+                fetchProductsDefault(currentPage + 1);
+              }}
+              className="pagination-btn"
+              sx={{
+                textTransform: "none",
+                borderRadius: "20px",
+                px: 2,
+                fontWeight: "600",
+                fontSize: "0.9rem",
+                "&:hover": {
+                  backgroundColor: "rgba(25, 118, 210, 0.08)",
+                },
+              }}
             >
               Trang sau ▶
             </Button>
@@ -828,20 +887,17 @@ const ProductGrid = ({ searchKey }) => {
         )}
       </div>
 
-      {/* Modal so sánh sản phẩm */}
       {showCompareModal && comparedProducts.length === 2 && (
         <div
           style={{
             position: "fixed",
-            top: 0,
-            left: 0,
-            width: "100vw",
-            height: "100vh",
-            background: "rgba(0,0,0,0.6)",
+            inset: 0,
+            background: "rgba(0,0,0,0.55)",
             display: "flex",
             justifyContent: "center",
             alignItems: "center",
             zIndex: 2000,
+            padding: "10px",
           }}
           onClick={handleCloseCompare}
         >
@@ -850,37 +906,45 @@ const ProductGrid = ({ searchKey }) => {
             style={{
               background: "#fff",
               borderRadius: "12px",
-              padding: "24px",
+              padding: "20px",
               width: "90%",
-              maxWidth: "950px",
-              boxShadow: "0 4px 12px rgba(0,0,0,0.3)",
+              maxWidth: "800px", 
+              boxShadow: "0 6px 16px rgba(0,0,0,0.25)",
               position: "relative",
             }}
           >
+            {/* Close Button */}
             <button
               onClick={handleCloseCompare}
               style={{
                 position: "absolute",
                 top: "10px",
-                right: "20px",
+                right: "15px",
                 fontSize: "26px",
                 border: "none",
                 background: "transparent",
                 cursor: "pointer",
+                fontWeight: "bold",
               }}
             >
               &times;
             </button>
 
-            <h3 style={{ textAlign: "center", marginBottom: "20px" }}>
-              So sánh sản phẩm
-            </h3>
+            <h2
+              style={{
+                textAlign: "center",
+                marginBottom: "18px",
+                fontWeight: "700",
+                fontSize: "20px",
+              }}
+            >
+              SO SÁNH SẢN PHẨM
+            </h2>
 
             <div
               style={{
                 display: "flex",
-                justifyContent: "space-around",
-                gap: "20px",
+                gap: "15px",
               }}
             >
               {comparedProducts.map((p) => (
@@ -890,33 +954,82 @@ const ProductGrid = ({ searchKey }) => {
                     flex: 1,
                     border: "1px solid #ddd",
                     borderRadius: "10px",
-                    padding: "16px",
+                    padding: "14px",
                     textAlign: "center",
+                    background: "#fafafa",
                   }}
                 >
                   <img
-                    src={p.imageUrl}
-                    alt={p.title}
+                    src={p.image || p.imageBase64}
+                    alt={p.name}
                     style={{
                       width: "100%",
-                      maxWidth: "200px",
-                      height: "200px",
+                      maxWidth: "180px", 
+                      height: "150px",
                       objectFit: "cover",
                       marginBottom: "10px",
                       borderRadius: "8px",
                     }}
                   />
-                  <h5>{p.title}</h5>
-                  <p style={{ color: "#1976d2", fontWeight: "600" }}>
+
+                  <h4 style={{ fontWeight: "600", marginBottom: "5px" }}>
+                    {p.name}
+                  </h4>
+
+                  <p
+                    style={{
+                      color: "#1976d2",
+                      fontWeight: "700",
+                      fontSize: "16px",
+                      marginBottom: "8px",
+                    }}
+                  >
                     {p.price?.toLocaleString("vi-VN")} ₫
                   </p>
+
                   <p>
-                    <b>Danh mục:</b> {p.category}
+                    <b>Danh mục:</b> {p.categoryname}
                   </p>
                   <p>
                     <b>Thương hiệu:</b> {p.tradeName}
                   </p>
-                  <p>{p.description || "Không có mô tả"}</p>
+
+                  <p style={{ marginTop: "8px", fontSize: "14px" }}>
+                    {p.description || "Không có mô tả"}
+                  </p>
+
+                  {p.productDetails && p.productDetails.length > 0 && (
+                    <div
+                      style={{
+                        marginTop: "12px",
+                        background: "#fff",
+                        border: "1px solid #ddd",
+                        padding: "10px",
+                        borderRadius: "8px",
+                        textAlign: "left",
+                      }}
+                    >
+                      <h5 style={{ marginBottom: "6px", fontSize: "14px" }}>
+                        Thông số kỹ thuật:
+                      </h5>
+
+                      <p>
+                        <b>Camera:</b>{" "}
+                        {p.productDetails[0].productCamera || "N/A"}
+                      </p>
+                      <p>
+                        <b>Wifi:</b> {p.productDetails[0].productWifi || "N/A"}
+                      </p>
+                      <p>
+                        <b>Màn hình:</b>{" "}
+                        {p.productDetails[0].productScreen || "N/A"}
+                      </p>
+                      <p>
+                        <b>Bluetooth:</b>{" "}
+                        {p.productDetails[0].productBluetooth || "N/A"}
+                      </p>
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
