@@ -43,6 +43,7 @@ const ProductSearch = ({ open, onClose }) => {
   const [details, setDetails] = useState([]);
   const [products, setProducts] = useState([]);
 
+    // ========== 1. STATE (Trạng thái dữ liệu) ==========
   const [priceRange, setPriceRange] = useState([0, 50000000]);
   const [selectedCategories, setSelectedCategories] = useState([]);
   const [selectedTrademarks, setSelectedTrademarks] = useState([]);
@@ -51,7 +52,7 @@ const ProductSearch = ({ open, onClose }) => {
   const [productNames, setProductNames] = useState([]);
   const [selectedProductID, setSelectedProductID] = useState(null);
 
-  useEffect(() => {
+  useEffect(() => { // ========== tải dữ liệu từ các API ==========
     if (open) {
       fetch(`${API_BASE_URL}/api/v1/category/Listgetall`)
         .then((res) => res.json())
@@ -79,7 +80,6 @@ const ProductSearch = ({ open, onClose }) => {
   }, [open]);
 
   useEffect(() => {
-    console.log("selectedProductID changed:", selectedProductID);
   }, [selectedProductID]);
 
   const toggleSelection = (value, selected, setSelected) => {
@@ -91,6 +91,7 @@ const ProductSearch = ({ open, onClose }) => {
   };
 
   const handleSearch = async () => {
+    //object chứa tất cả tiêu chí tìm kiếm
     const criteria = {
       categoryID: selectedCategories,
       tradeID: selectedTrademarks,
@@ -101,12 +102,14 @@ const ProductSearch = ({ open, onClose }) => {
     };
 
     try {
+      // gửi yêu cầu tìm kiếm đến API criteria
       const res = await fetch(`${API_BASE_URL}/dossier-statistic/search`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(criteria),
       });
       const data = await res.json();
+      // Lưu kết quả vào state products
       setProducts(data.content || []);
     } catch (err) {
       console.error("Lỗi khi tìm kiếm:", err);
@@ -114,6 +117,7 @@ const ProductSearch = ({ open, onClose }) => {
   };
 
   const handleReset = () => {
+    //reset tất cả về mặc định
     setSelectedCategories([]);
     setSelectedTrademarks([]);
     setSelectedVersions([]);
@@ -124,8 +128,8 @@ const ProductSearch = ({ open, onClose }) => {
   };
 
   const handleProductClick = (productId) => {
-    onClose();
-    navigate(`/product/${productId}`);
+    onClose();// đóng dialog
+    navigate(`/product/${productId}`);// chuyển đến trang chi tiết sản phẩm
   };
 
   return (

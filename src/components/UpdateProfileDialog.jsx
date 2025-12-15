@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate  } from "react-router-dom";
 import "../styles/UpdateProfilePage/UpdateProfilePage.css";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -7,6 +7,9 @@ import API_BASE_URL from "../config/config.js";
 
 const UpdateProfilePage = () => {
   const { accountID } = useParams();
+  const navigate = useNavigate();
+  const [errors, setErrors] = useState({});
+  
   const [formData, setFormData] = useState({
     accountName: "",
     username: "",
@@ -34,15 +37,14 @@ const UpdateProfilePage = () => {
           image: data.image || "",
         });
       })
-      .catch((err) => toast.error("❌ Không thể tải thông tin tài khoản!"));
+      .catch((err) => toast.error("Không thể tải thông tin tài khoản!"));
   }, [accountID]);
 
   const handleImageChange = (e) => {
     const file = e.target.files[0];
     if (file) {
-      // ✅ Validate file size (max 5MB)
       if (file.size > 5 * 1024 * 1024) {
-        toast.error("❌ Ảnh không được vượt quá 5MB!");
+        toast.error("Ảnh không được vượt quá 5MB!");
         return;
       }
 
@@ -59,25 +61,22 @@ const UpdateProfilePage = () => {
     e.preventDefault();
     setLoading(true);
 
-    // ✅ Validate form
     if (!formData.username || !formData.email || !formData.phoneNumber) {
-      toast.error("⚠️ Vui lòng điền đầy đủ thông tin!");
+      toast.error("Vui lòng điền đầy đủ thông tin!");
       setLoading(false);
       return;
     }
 
-    // ✅ Validate email
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(formData.email)) {
-      toast.error("⚠️ Email không hợp lệ!");
+      toast.error("Email không hợp lệ!");
       setLoading(false);
       return;
     }
 
-    // ✅ Validate phone
     const phoneRegex = /^[0-9]{9,11}$/;
     if (!phoneRegex.test(formData.phoneNumber)) {
-      toast.error("⚠️ Số điện thoại không hợp lệ!");
+      toast.error("Số điện thoại không hợp lệ!");
       setLoading(false);
       return;
     }
@@ -95,12 +94,29 @@ const UpdateProfilePage = () => {
       );
 
       const result = await res.json();
-      if (!res.ok) throw new Error(result.message || "Cập nhật thất bại");
+      if (!res.ok) {
+        const errorMessage = result.message || "Cập nhật thất bại";
 
-      toast.success(result.message);
-      setTimeout(() => window.location.reload(), 1500);
+        if (errorMessage.includes("Email")) {
+          setErrors((prev) => ({ ...prev, email: errorMessage }));
+          toast.error("❌ " + errorMessage);
+        }
+        else if (errorMessage.includes("Số điện thoại") || errorMessage.includes("phone")) {
+          setErrors((prev) => ({ ...prev, phoneNumber: errorMessage }));
+          toast.error("❌ " + errorMessage);
+        }
+        else {
+          toast.error("❌ " + errorMessage);
+        }
+        throw new Error(errorMessage);
+      }
+
+      toast.success("✅ " + result.message);
+      setTimeout(() => {
+        navigate(-1);
+      }, 1500);
     } catch (err) {
-      toast.error("❌ " + err.message);
+      console.error("Error updating profile:", err);
     } finally {
       setLoading(false);
     }

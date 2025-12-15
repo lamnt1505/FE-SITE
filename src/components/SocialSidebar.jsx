@@ -50,7 +50,7 @@ const ChatWindow = ({ onClose }) => {
       scrollToBottom();
     } catch (err) {
       console.error("Lỗi gửi chat:", err);
-      alert("⚠️ Không thể gửi tin nhắn");
+      alert("Không thể gửi tin nhắn");
     } finally {
       setSending(false);
     }
@@ -64,6 +64,7 @@ const ChatWindow = ({ onClose }) => {
           &times;
         </button>
       </div>
+      {/* đoạn chat giữa khách hàng và admin */}
       <div className="chat-body">
         {messages.length === 0 ? (
           <p className="text-muted">
@@ -101,7 +102,6 @@ const ChatWindow = ({ onClose }) => {
 
 const SocialSidebar = () => {
   const [isChatOpen, setIsChatOpen] = useState(false);
-
   return (
     <>
       <div className="chat-bubble-container">

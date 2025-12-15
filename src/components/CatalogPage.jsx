@@ -43,7 +43,7 @@ const CatalogPage = () => {
       }
       toast.success(
         <div className="flex items-center space-x-2">
-          <span>SẢN PHẨM ĐÃ ĐƯỢC THÊM VÀO GIỎ HÀNG</span>
+          <span>Sản phẩm đã được thêm vào giỏ hàng</span>
         </div>
       );
     } else if (cartState.status === "failed") {
@@ -451,7 +451,7 @@ const CatalogPage = () => {
                         src={p.image || p.image1 || p.imageBase64}
                         alt={p.name}
                         style={{
-                          width: "120px", // 🔥 GIẢM TỪ 150px
+                          width: "120px",
                           height: "120px",
                           objectFit: "contain",
                           borderRadius: "8px",

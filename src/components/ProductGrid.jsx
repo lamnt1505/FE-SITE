@@ -483,7 +483,10 @@ const ProductGrid = ({ searchKey }) => {
                 onClick={() => toggleFavorite(product.id)}
               >
                 {favorites.includes(product.id) ? (
+                  <>
                   <FavoriteIcon />
+                  <span>Yêu Thích</span>
+                  </>
                 ) : (
                   <FavoriteBorderIcon />
                 )}

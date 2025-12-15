@@ -10,13 +10,13 @@ import Breadcrumb from "./Breadcrumb";
 
 const CartPage = () => {
   const [cartItems, setCartItems] = useState([]);
-  const navigate = useNavigate();
   const [discountCode, setDiscountCode] = useState("");
-  const dispatch = useDispatch();
   const { loading } = useSelector((state) => state.cart);
   const [discountedTotal, setDiscountedTotal] = useState(null);
   const [showModal, setShowModal] = useState(false);
   const [showVnpayModal, setShowVnpayModal] = useState(false);
+  const navigate = useNavigate();
+  const dispatch = useDispatch();
 
   const getValueOrFallback = (primary, fallback) => {
     if (primary && primary.trim() !== "") {
@@ -57,13 +57,16 @@ const CartPage = () => {
     note: "",
   });
 
+  //lấy giỏ hàng từ server
   useEffect(() => {
     const fetchCart = async () => {
       try {
         const res = await fetch(`${API_BASE_URL}/product-cart`, {
-          credentials: "include",
+          credentials: "include",//gửi thêm cookie
         });
         const data = await res.json();
+
+        // Map dữ liệu từ API sang format local
         const mappedCart = (data.cart || []).map((item) => ({
           id: item.productID,
           name: item.name,
@@ -84,10 +87,12 @@ const CartPage = () => {
     setFormData({ ...formData, [name]: value });
   };
 
+  //gọi từ cartSlice => update số lượng sản phẩm trong giỏ hàng
   const handleUpdateCart = () => {
     cartItems.forEach((item) => {
+      // gọi redux action updateQuantity
       dispatch(updateQuantity({ productID: item.id, amount: item.amount }))
-        .unwrap()
+        .unwrap()// lấy kết quả từ async thunk
         .then((res) => {
           if (res.result === 1) {
             toast.success(`Đã cập nhật ${item.name}`);
@@ -104,7 +109,8 @@ const CartPage = () => {
         .catch(() => toast.error("Lỗi server khi cập nhật"));
     });
   };
-
+  
+  // xóa sản phẩm khỏi giỏ hàng
   const removeItem = async (id) => {
     try {
       const res = await fetch(
@@ -132,7 +138,9 @@ const CartPage = () => {
     }
   };
 
+  // hàm xử lý số lượng
   const changeQuantity = (id, newAmount) => {
+    // Nếu số lượng < 1 → không cập nhật
     if (newAmount < 1) return;
     setCartItems((prevItems) =>
       prevItems.map((item) =>
@@ -143,12 +151,15 @@ const CartPage = () => {
 
   const getTotal = () => cartItems.reduce((sum, item) => sum + item.price * item.amount, 0);
 
+  //hàm xử lý áp dụng mã giảm giá
   const applyDiscount = async () => {
+    // Kiểm tra mã có trống không
     if (!discountCode.trim()) {
       toast.error("Vui lòng nhập mã giảm giá!");
       return;
     }
     try {
+      //gọi api sản phẩm
       const res = await fetch(`${API_BASE_URL}/dossier-statistic/apply`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -166,25 +177,28 @@ const CartPage = () => {
       const data = await res.json();
 
       if (!res.ok) {
-        toast.error(data.message || "❌ Mã giảm giá không hợp lệ!");
+        toast.error(data.message || "Mã giảm giá không hợp lệ!");
         return;
       }
       if (data.success) {
+        // áp dụng thành công
         setDiscountedTotal(data.discountedTotal);
         toast.success(
-          `✅ ${
+          `${
             data.message
           }\nTổng sau giảm: ${data.discountedTotal.toLocaleString()}₫`
         );
       } else {
-        toast.warning(data.message || "⚠️ Mã giảm giá không hợp lệ!");
+        toast.warning(data.message || "Mã giảm giá không hợp lệ!");
       }
     } catch (err) {
-      toast.error("⚠️ Đã xảy ra lỗi hệ thống, vui lòng thử lại!");
+      toast.error("Đã xảy ra lỗi hệ thống, vui lòng thử lại!");
     }
   };
-
+  
+  //hàm xử lý ĐẶT HÀNG (COD)
   const placeOrder = async () => {
+    //các validate
     const { receiverName, receiverPhone, email, shippingAddress } = formData;
 
     if (!receiverName || !receiverPhone || !email || !shippingAddress) {
@@ -198,16 +212,19 @@ const CartPage = () => {
       return;
     }
 
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9-]{2,}\.[a-zA-Z]{2,}$/;
+
     if (!emailRegex.test(email)) {
       toast.error("Email không hợp lệ!");
       return;
     }
+
     try {
+      //request đặt hàng
       const accountId = localStorage.getItem("accountId");
       const res = await fetch(`${API_BASE_URL}/dossier-statistic/orders`, {
         method: "POST",
-        credentials: "include",
+        credentials: "include",//gửi kèm cookie
         headers: {
           "Content-Type": "application/json",
           "X-Account-ID": accountId,
@@ -217,19 +234,20 @@ const CartPage = () => {
       const result = await res.text();
 
       if (result === "1") {
+        // Thành công
         toast.success("Đặt hàng thành công! Đang chuyển hướng...", {
           autoClose: 1000,
         });
         toast.info("Email xác nhận đã được gửi tới " + email, {
           autoClose: 2000,
         });
-        setCartItems([]);
+        setCartItems([]);//clean giỏ hàng
         setTimeout(() => navigate("/myorder"), 1200);
         if (window.updateCartQuantity) {
           window.updateCartQuantity();
         }
-      } else if (result === "0") {
-        localStorage.setItem("redirectAfterLogin", "/cart");
+      } else if (result === "0") {//chưa đăng nhập
+        localStorage.setItem("redirectAfterLogin", "/cart");// lưu trang hiện tại để redirect sau khi đăng nhập
         toast.error("Bạn cần đăng nhập để đặt hàng.");
         setTimeout(() => navigate("/login"), 1500);
       } else if (result === "-1") {
@@ -242,16 +260,37 @@ const CartPage = () => {
     }
   };
 
+  //hàm xử lý THANH TOÁN VNPAY
   const handleVnpayPaymentEdit = async () => {
+    const { receiverName, receiverPhone, email, shippingAddress } = formData;
+
+    if (!receiverName || !receiverPhone || !email || !shippingAddress) {
+      toast.error("Vui lòng nhập đầy đủ thông tin giao hàng!");
+      return;
+    }
+
+    const phoneRegex = /^[0-9]{9,11}$/;
+    if (!phoneRegex.test(receiverPhone)) {
+      toast.error("Số điện thoại không hợp lệ!");
+      return;
+    }
+
+    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9-]{2,}\.[a-zA-Z]{2,}$/;
+    if (!emailRegex.test(email)) {
+      toast.error("Email không hợp lệ!");
+      return;
+    }
+
     try {
       const accountId = localStorage.getItem("accountId");
       if (!accountId) {
-        localStorage.setItem("redirectAfterLogin", "/cart");
+        localStorage.setItem("redirectAfterLogin", "/cart");// lưu trang hiện tại để redirect sau khi đăng nhập
         toast.error("Bạn cần đăng nhập để thanh toán!");
         setTimeout(() => navigate("/login"), 1500);
         return;
       }
 
+      // Tạo đơn hàng status = "CHỜ THANH TOÁN"
       const orderRes = await fetch(`${API_BASE_URL}/orders/vnpay`, {
         method: "POST",
         credentials: "include",
@@ -268,11 +307,12 @@ const CartPage = () => {
         return;
       }
 
-      const txnRef = orderData.txnRef;
+      const txnRef = orderData.txnRef;// mã giao dịch từ server
 
       localStorage.setItem("currentTxnRef", txnRef);
       localStorage.setItem("paymentStartTime", new Date().getTime());
 
+      // lấy link thanh toán từ VNPay
       const payRes = await fetch(
         `${API_BASE_URL}/create-payment?txnRef=${txnRef}`,
         {
@@ -284,8 +324,10 @@ const CartPage = () => {
       const payData = await payRes.json();
 
       if (payData.status === "success") {
-        toast.success("Chuyển hướng tới VNPAY...");
+        toast.success("Chuyển hướng tới vnPay...");
         const paymentUrl = payData.paymentUrl;
+
+        //mở popup thanh toán
         setTimeout(() => {
           const vnpayWindow = window.open(
             paymentUrl,
@@ -300,18 +342,19 @@ const CartPage = () => {
             return;
           }
 
+          // theo dõi popup
           const startTime = new Date().getTime();
-          const TIMEOUT = 10 * 60 * 1000; // 10 phút = 600.000ms
+          const TIMEOUT = 10 * 30 * 1000; // 10 phút = 600.000ms
 
           const checkWindowInterval = setInterval(async () => {
-          const elapsed = new Date().getTime() - startTime;
-            // Nếu quá 10 phút → timeout
+            const elapsed = new Date().getTime() - startTime;
+
+            // quá 10 phút => timeout => tắt popup => trả về THANH TOÁN THẤT BẠI
             if (elapsed > TIMEOUT) {
               clearInterval(checkWindowInterval);
               if (vnpayWindow && !vnpayWindow.closed) {
                 vnpayWindow.close();
               }
-
               try {
                 await fetch(`${API_BASE_URL}/vnpay-cancel/${txnRef}`, {
                   method: "POST",
@@ -330,11 +373,11 @@ const CartPage = () => {
               }, 1500);
               return;
             }
+
             //Nếu popup đã đóng => kiểm tra kết quả
             if (vnpayWindow && vnpayWindow.closed) {
               clearInterval(checkWindowInterval);
               
-
               try {
                 //Kiểm tra trạng thái đơn hàng
                 const statusRes = await fetch(
@@ -343,6 +386,7 @@ const CartPage = () => {
                 );
                 const statusData = await statusRes.json();
                 //Trạng thái "CHỜ THANH TOÁN" => Khách hủy
+
                 if (statusData.orderStatus === "CHỜ THANH TOÁN") {
                   const cancelRes = await fetch(
                     `${API_BASE_URL}/vnpay-cancel/${txnRef}`,
@@ -354,15 +398,14 @@ const CartPage = () => {
                   );
 
                   const cancelData = await cancelRes.json();
-
                   if (cancelData.status === "ok") {
                     toast.error("Bạn đã hủy thanh toán");
                   }
-                  //Trạng thái "Chờ duyệt" => Khách thanh toán thành công
                 } else if (statusData.orderStatus === "Chờ duyệt") {
+                  //Trạng thái "Chờ duyệt" => Khách thanh toán thành công
                   toast.success("Thanh toán thành công!");
-                   // Trạng thái "THANH TOÁN THẤT BẠI" => Thất bại
                 } else if (statusData.orderStatus === "THANH TOÁN THẤT BẠI") {
+                  // Trạng thái "THANH TOÁN THẤT BẠI" => Thất bại
                   toast.error("Thanh toán thất bại");
                 }
               } catch (error) {
@@ -372,13 +415,15 @@ const CartPage = () => {
 
               localStorage.removeItem("currentTxnRef");
               localStorage.removeItem("paymentStartTime");
-              //trả về myorder kiểm tra trạng thái đơn hàng
+
+              //navigate myorder kiểm tra trạng thái đơn hàng
               setTimeout(() => {
                 window.location.href = "/myorder";
               }, 1500);
             }
           }, 1000);
 
+          // Cleanup khi user F5 hoặc close tab
           const cleanupHandler = () => {
             clearInterval(checkWindowInterval);
             if (vnpayWindow && !vnpayWindow.closed) {

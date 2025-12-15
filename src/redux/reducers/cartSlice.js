@@ -2,7 +2,7 @@ import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import axios from "axios";
 import API_BASE_URL from "../../config/config.js";
 
-export const updateQuantity = createAsyncThunk(
+export const updateQuantity = createAsyncThunk(//Xử lý cập nhật số lượng trong giỏ hàng
   "cart/updateQuantity",
   async ({ productID, amount }, { rejectWithValue }) => {
     try {
@@ -14,7 +14,6 @@ export const updateQuantity = createAsyncThunk(
           withCredentials: true,
         }
       );
-      console.log("updateQuantity response:", res); 
       return { result: res.data, productID, amount };
     } catch (err) {
       return rejectWithValue(err.response?.data || "Lỗi server");
@@ -22,6 +21,7 @@ export const updateQuantity = createAsyncThunk(
   }
 );
 
+// Tạo cart slice
 const cartSlice = createSlice({
   name: "cart",
   initialState: {
@@ -44,10 +44,10 @@ const cartSlice = createSlice({
         state.loading = false;
         const {result, productID, amount } = action.payload;
 
-        if (result === "1") {
+        if (result === "1") {//cập nhật số lượng thành công
           const item = state.cartItems.find((p) => p.id === productID);
           if (item) item.amount = amount;
-        } else if (result === "2") {
+        } else if (result === "2") {// xóa sản phẩm khỏi giỏ hàng
           state.cartItems = state.cartItems.filter((p) => p.id !== productID);
         }
       })

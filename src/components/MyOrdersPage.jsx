@@ -616,7 +616,7 @@ const MyOrdersPage = () => {
                 }
                 onChange={(e) => {
                   if (e.target.value.trim()) {
-                    setCancelReason(`✍️ Khác - ${e.target.value}`);
+                    setCancelReason(`Khác - ${e.target.value}`);
                   } else {
                     setCancelReason("");
                   }
@@ -645,7 +645,7 @@ const MyOrdersPage = () => {
                   cursor: !cancelReason.trim() ? "not-allowed" : "pointer",
                 }}
               >
-                🚫 XÁC NHẬN HỦY
+                XÁC NHẬN HỦY
               </button>
             </div>
           </div>
